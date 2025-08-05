@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   console.log('This is a popup!');
 
-  const button = document.getElementById('update-url');
+  const button = document.getElementById('add-cookie');
   if (!button) {
     return;
   }
@@ -13,10 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const url = new URL(tab.url);
-      const param = 'ref=badger:123;buisID:55';
-      url.search = url.search ? `${url.search}&${param}` : `?${param}`;
-      chrome.tabs.update(tab.id, { url: url.toString() });
+      chrome.cookies.set({
+        url: tab.url,
+        name: 'uuid',
+        value: '1111'
+      });
     });
   });
 });

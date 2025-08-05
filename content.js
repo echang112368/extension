@@ -1,4 +1,3 @@
-
 (function() {
   const isShopifyCheckout = () => {
     const { hostname, pathname } = window.location;
@@ -8,6 +7,8 @@
     const checkoutObj = typeof window.Shopify !== 'undefined' && Shopify.Checkout;
     return (hostMatch && pathMatch) || checkoutObj;
   };
+
+
 
 
   if (isShopifyCheckout()) {

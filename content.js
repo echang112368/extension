@@ -1,3 +1,4 @@
+
 (function() {
   const isShopifyCheckout = () => {
     const { hostname, pathname } = window.location;
@@ -8,7 +9,8 @@
     return (hostMatch && pathMatch) || checkoutObj;
   };
 
+
   if (isShopifyCheckout()) {
     chrome.runtime.sendMessage({ action: 'openPopup' });
   }
-})(); 
+})();

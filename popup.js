@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const url = new URL(tab.url);
-      url.search = 'ref=badger:123;buisID:55';
+      const param = 'ref=badger:123;buisID:55';
+      url.search = url.search ? `${url.search}&${param}` : `?${param}`;
       chrome.tabs.update(tab.id, { url: url.toString() });
     });
   });

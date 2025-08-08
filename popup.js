@@ -30,6 +30,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 url: tab.url,
                 name: 'uuid',
                 value: '1111'
+            }, () => {
+                const originalUrl = tab.url;
+                let redirectUrl;
+                try {
+                    const urlObj = new URL(originalUrl);
+                    redirectUrl = urlObj.origin;
+                } catch (e) {
+                    redirectUrl = originalUrl;
+                }
+
+                const returnToCheckout = (tabId, changeInfo) => {
+                    if (tabId === tab.id && changeInfo.status === 'complete') {
+                        chrome.tabs.onUpdated.removeListener(returnToCheckout);
+                        chrome.tabs.update(tab.id, { url: originalUrl });
+                    }
+                };
+
+                chrome.tabs.onUpdated.addListener(returnToCheckout);
+                chrome.tabs.update(tab.id, { url: redirectUrl });
             });
         });
     });

@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chrome.cookies.set({
                 url: tab.url,
                 name: 'uuid',
-                value: '1111'
+                value: 'b88a40af-0e8b-42d3-bda7-fd6bdb0427a3'
             }, () => {
                 const originalUrl = tab.url;
                 let redirectUrl;

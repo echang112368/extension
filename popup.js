@@ -26,33 +26,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 // ignore invalid URLs and continue to set cookie
             }
 
-            chrome.cookies.set({
-                url: tab.url,
-                name: 'uuid',
-                value: 'b88a40af-0e8b-42d3-bda7-fd6bdb0427a3'
-            }, () => {
-                const originalUrl = tab.url;
-                let redirectUrl;
-                try {
-                    const urlObj = new URL(originalUrl);
-                    redirectUrl = urlObj.origin;
-                } catch (e) {
-                    redirectUrl = originalUrl;
+            chrome.cookies.set(
+                {
+                    url: tab.url,
+                    name: 'uuid',
+                    value: 'b88a40af-0e8b-42d3-bda7-fd6bdb0427a3',
+                },
+                () => {
+                    try {
+                        const urlObj = new URL(tab.url);
+                        const redirectUrl = `${urlObj.origin}/cart?return_to=/checkout`;
+                        chrome.tabs.update(tab.id, { url: redirectUrl });
+                    } catch (e) {
+                        // If URL parsing fails, stay on the current page
+                        chrome.tabs.update(tab.id, { url: tab.url });
+                    }
                 }
-
-                chrome.tabs.update(tab.id, { url: redirectUrl }, () => {
-                    // recreate the order before returning to the original page
-                    setTimeout(() => {
-                        fetch(originalUrl, { credentials: 'include' })
-                            .catch(() => {
-                                // Ignore errors recreating the order
-                            })
-                            .finally(() => {
-                                chrome.tabs.update(tab.id, { url: originalUrl });
-                            });
-                    }, 1000);
-                });
-            });
+            );
         });
     });
 });

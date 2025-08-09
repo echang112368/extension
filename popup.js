@@ -41,9 +41,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 chrome.tabs.update(tab.id, { url: redirectUrl }, () => {
-                    // return to checkout after briefly leaving
+                    // recreate the order before returning to the original page
                     setTimeout(() => {
-                        chrome.tabs.update(tab.id, { url: originalUrl });
+                        fetch(originalUrl, { credentials: 'include' })
+                            .catch(() => {
+                                // Ignore errors recreating the order
+                            })
+                            .finally(() => {
+                                chrome.tabs.update(tab.id, { url: originalUrl });
+                            });
                     }, 1000);
                 });
             });

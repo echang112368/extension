@@ -15,32 +15,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            let urlObj;
             try {
-                const urlObj = new URL(tab.url);
-                const refValue = urlObj.searchParams.get('ref');
-                const uuidPattern = /^badger:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-                if (refValue && uuidPattern.test(refValue)) {
-                    return;
-                }
+                urlObj = new URL(tab.url);
             } catch (e) {
-                // ignore invalid URLs and continue to set cookie
+                // If URL parsing fails, stay on the current page
+                chrome.tabs.update(tab.id, { url: tab.url });
+                return;
+            }
+
+            const refValue = urlObj.searchParams.get('ref');
+            const uuidPattern = /^badger:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+            if (refValue && uuidPattern.test(refValue)) {
+                return;
             }
 
             chrome.cookies.set(
                 {
-                    url: tab.url,
+                    url: `${urlObj.origin}/`,
                     name: 'uuid',
                     value: 'b88a40af-0e8b-42d3-bda7-fd6bdb0427a3',
+                    path: '/',
                 },
                 () => {
-                    try {
-                        const urlObj = new URL(tab.url);
-                        const redirectUrl = `${urlObj.origin}/cart?return_to=/checkout`;
-                        chrome.tabs.update(tab.id, { url: redirectUrl });
-                    } catch (e) {
-                        // If URL parsing fails, stay on the current page
-                        chrome.tabs.update(tab.id, { url: tab.url });
-                    }
+                    const redirectUrl = `${urlObj.origin}/checkout`;
+                    chrome.tabs.update(tab.id, { url: redirectUrl });
                 }
             );
         });

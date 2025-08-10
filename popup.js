@@ -14,44 +14,53 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      chrome.cookies.set(
-        {
-          url: `${urlObj.origin}/`,
-          name: 'uuid',
-          value: 'b88a40af-0e8b-42d3-bda7-fd6bdb0427a3',
-          path: '/',
-        },
-        () => {
-          const targetUrl = `${urlObj.origin}/cart`;
+      const targetUrl = `${urlObj.origin}/cart`;
 
-          const onUpdated = (updatedTabId, info, updatedTab) => {
-            if (updatedTabId === tab.id && info.status === 'complete') {
-              chrome.tabs.onUpdated.removeListener(onUpdated);
-              chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                func: () => {
-                  const selectors = [
-                    'button[name="checkout"]',
-                    '#checkout',
-                    'button.checkout',
-                    'a.checkout',
-                  ];
-                  for (const sel of selectors) {
-                    const el = document.querySelector(sel);
-                    if (el) {
-                      el.click();
-                      break;
-                    }
-                  }
-                },
-              });
+      const onCartLoaded = (updatedTabId, info) => {
+        if (updatedTabId === tab.id && info.status === 'complete') {
+          chrome.tabs.onUpdated.removeListener(onCartLoaded);
+
+          chrome.cookies.set(
+            {
+              url: `${urlObj.origin}/`,
+              name: 'uuid',
+              value: 'b88a40af-0e8b-42d3-bda7-fd6bdb0427a3',
+              path: '/',
+            },
+            () => {
+              const onReloaded = (reloadedTabId, reloadInfo) => {
+                if (reloadedTabId === tab.id && reloadInfo.status === 'complete') {
+                  chrome.tabs.onUpdated.removeListener(onReloaded);
+                  chrome.scripting.executeScript({
+                    target: { tabId: tab.id },
+                    func: () => {
+                      const selectors = [
+                        'button[name="checkout"]',
+                        '#checkout',
+                        'button.checkout',
+                        'a.checkout',
+                      ];
+                      for (const sel of selectors) {
+                        const el = document.querySelector(sel);
+                        if (el) {
+                          el.click();
+                          break;
+                        }
+                      }
+                    },
+                  });
+                }
+              };
+
+              chrome.tabs.onUpdated.addListener(onReloaded);
+              chrome.tabs.reload(tab.id);
             }
-          };
-
-          chrome.tabs.onUpdated.addListener(onUpdated);
-          chrome.tabs.update(tab.id, { url: targetUrl });
+          );
         }
-      );
+      };
+
+      chrome.tabs.onUpdated.addListener(onCartLoaded);
+      chrome.tabs.update(tab.id, { url: targetUrl });
     });
   });
 });

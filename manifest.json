@@ -3,25 +3,20 @@
   "description": "Base Level Extension",
   "version": "1.0",
   "manifest_version": 3,
-  "permissions": ["tabs", "cookies"],
-  "host_permissions": ["<all_urls>"],
+  "permissions": [
+    "tabs",
+    "cookies"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "action": {
     "default_popup": "hello.html",
     "default_icon": "hello_extensions.png"
   },
-   "background": {
+  "background": {
     "service_worker": "background.js"
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "https://checkout.shopify.com/*",
-        "https://*.myshopify.com/*"
-      ],
-      "js": ["content.js"],
-      "run_at": "document_idle"
-    }
-  ],
   "icons": {
     "48": "hello_extensions.png",
     "128": "hello_extensions.png"

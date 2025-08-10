@@ -5,7 +5,8 @@
   "manifest_version": 3,
   "permissions": [
     "tabs",
-    "cookies"
+    "cookies",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>"

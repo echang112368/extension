@@ -6,7 +6,8 @@
   "permissions": [
     "tabs",
     "cookies",
-    "scripting"
+    "scripting",
+    "webNavigation"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -19,7 +20,6 @@
     "service_worker": "background.js"
   },
   "icons": {
-    "48": "hello_extensions.png",
-    "128": "hello_extensions.png"
+    "48": "hello_extensions.png"
   }
 }

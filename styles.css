@@ -1,0 +1,47 @@
+.coupon-wrapper {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 2147483647;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  font-family: sans-serif;
+  animation: fadeIn 0.3s ease;
+  min-width: 200px;
+}
+
+.coupon-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background: #f5f5f5;
+  cursor: move;
+  user-select: none;
+  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.coupon-close {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.coupon-close:focus {
+  outline: 2px solid #000;
+}
+
+.coupon-body {
+  padding: 16px;
+  font-size: 20px;
+  text-align: center;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

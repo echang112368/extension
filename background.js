@@ -2,23 +2,14 @@
  * README
  * Load unpacked extension: open chrome://extensions, enable Developer mode,
  * click "Load unpacked" and select this folder.
- * Test: Navigate to a Shopify checkout page (e.g., https://checkout.shopify.com/...)
- * and the extension should show the coupon overlay.
+ * The extension will display a Hello World overlay on every page you visit.
  */
 
-function isCheckoutUrl(url) {
-  return url.includes('/checkouts/');
-}
-
 function handleNavigation(details) {
-  if (isCheckoutUrl(details.url)) {
-    chrome.scripting.executeScript({
-      target: { tabId: details.tabId },
-      files: ['content.js'],
-    });
-  } else {
-    chrome.tabs.sendMessage(details.tabId, { type: 'REMOVE_COUPON_OVERLAY' }, () => {});
-  }
+  chrome.scripting.executeScript({
+    target: { tabId: details.tabId },
+    files: ['content.js'],
+  });
 }
 
 chrome.webNavigation.onCommitted.addListener(handleNavigation);

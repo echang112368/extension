@@ -7,7 +7,7 @@
  */
 
 function isCheckoutUrl(url) {
-  return /checkout\.shopify\.com|\.myshopify\.com|\/checkout(s)?/i.test(url);
+  return url.includes('/checkouts/');
 }
 
 function handleNavigation(details) {

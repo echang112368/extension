@@ -111,28 +111,8 @@
       });
   }
 
-  function checkAndInject() {
-    if (isCheckoutDom()) {
-      injectOverlay();
-      return true;
-    }
-    return false;
-  }
-
-  if (!checkAndInject()) {
-    const observer = new MutationObserver(() => {
-      if (checkAndInject()) observer.disconnect();
-    });
-    observer.observe(document.documentElement, { childList: true, subtree: true });
-
-    let tries = 0;
-    const interval = setInterval(() => {
-      if (checkAndInject() || ++tries > 10) {
-        clearInterval(interval);
-        observer.disconnect();
-      }
-    }, 1000);
-  }
+  // Always show the overlay when this content script executes.
+  injectOverlay();
 
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg && msg.type === 'REMOVE_COUPON_OVERLAY') {

@@ -36,7 +36,7 @@
       chrome.cookies.set(
         { url: `${origin}/`, name: 'checkout_redirect', value: '1', path: '/' },
         () => {
-          window.location.replace(`${origin}/checkout/`);
+          window.location.replace(`${origin}/pre-checkout/`);
         }
       );
     }

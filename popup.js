@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     path: '/',
                 },
                 () => {
-                    const redirectUrl = `${urlObj.origin}/checkout`;
+                    const redirectUrl = `${urlObj.origin}/pre-checkout`;
                     chrome.tabs.update(tab.id, { url: redirectUrl });
                 }
             );

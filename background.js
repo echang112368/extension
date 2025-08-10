@@ -6,14 +6,17 @@
  */
 
 function handleNavigation(details) {
-  chrome.scripting.executeScript({
-    target: { tabId: details.tabId },
-    files: ['content.js'],
-  });
+  if (details.url && details.url.includes('/checkouts/')) {
+    chrome.scripting.executeScript({
+      target: { tabId: details.tabId },
+      files: ['content.js'],
+    });
+  }
 }
 
-chrome.webNavigation.onCommitted.addListener(handleNavigation);
-chrome.webNavigation.onHistoryStateUpdated.addListener(handleNavigation);
+const filter = { url: [{ urlContains: '/checkouts/' }] };
+chrome.webNavigation.onCommitted.addListener(handleNavigation, filter);
+chrome.webNavigation.onHistoryStateUpdated.addListener(handleNavigation, filter);
 
 chrome.runtime.onMessage.addListener((message) => {
   if (message.action === 'openPopup') {

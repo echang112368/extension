@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const sel of selectors) {
           const el = document.querySelector(sel);
           if (el) {
-            el.click();
+            // el.click();
             break;
           }
         }

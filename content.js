@@ -37,36 +37,6 @@
     }
   }
 
-  function makeDraggable(wrapper, header) {
-    let startX, startY, origX, origY, dragging = false;
-
-    header.addEventListener('mousedown', (e) => {
-      dragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      const rect = wrapper.getBoundingClientRect();
-      origX = rect.left;
-      origY = rect.top;
-      wrapper.style.right = 'auto';
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    });
-
-    function onMove(e) {
-      if (!dragging) return;
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-      wrapper.style.left = `${origX + dx}px`;
-      wrapper.style.top = `${origY + dy}px`;
-    }
-
-    function onUp() {
-      dragging = false;
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-    }
-  }
-
   function injectOverlay() {
     if (document.getElementById(OVERLAY_ID)) return;
 
@@ -104,8 +74,6 @@
           if (e.key === 'Escape') removeOverlay();
         };
         document.addEventListener('keydown', escHandler);
-
-        makeDraggable(wrapper, shadow.querySelector('.coupon-header'));
 
         logTelemetry('shown');
       });

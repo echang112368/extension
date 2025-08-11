@@ -13,6 +13,10 @@ function handleNavigation(details) {
     return;
   }
 
+  if (details.transitionType === 'reload' || details.transitionType === 'auto_reload') {
+    injectedTabs.delete(details.tabId);
+  }
+
   if (injectedTabs.has(details.tabId)) return;
 
   injectedTabs.add(details.tabId);

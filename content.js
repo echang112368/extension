@@ -59,7 +59,9 @@
             <span>Coupons found!</span>
             <button class="coupon-close" aria-label="Close" tabindex="0">&times;</button>
           </div>
-          <div class="coupon-body">Hello World</div>
+          <div class="coupon-body">
+            <button id="add-cookie">Add Cookie</button>
+          </div>
         `;
         shadow.appendChild(wrapper);
         document.documentElement.appendChild(host);
@@ -68,6 +70,11 @@
         closeBtn.addEventListener('click', removeOverlay);
         closeBtn.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') removeOverlay();
+        });
+
+        const addCookieBtn = shadow.getElementById('add-cookie');
+        import(chrome.runtime.getURL('ui-popup.js')).then((module) => {
+          module.initAddCookieButton(addCookieBtn);
         });
 
         escHandler = (e) => {

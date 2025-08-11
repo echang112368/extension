@@ -67,7 +67,6 @@
         const addCookieBtn = shadow.getElementById('add-cookie');
         import(chrome.runtime.getURL('ui-popup.js')).then((module) => {
           module.initAddCookieButton(addCookieBtn);
-          module.initAddCookieButton(closeBtn);
         });
 
         escHandler = (e) => {

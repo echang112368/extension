@@ -1,7 +1,7 @@
 .coupon-wrapper {
   position: fixed;
   top: 10px;
-  left: 10px;
+  right: 10px;
   z-index: 2147483647;
   background: #fff;
   border: 1px solid #ccc;

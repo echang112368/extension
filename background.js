@@ -31,8 +31,75 @@ chrome.webNavigation.onCommitted.addListener(handleNavigation, filter);
 chrome.webNavigation.onHistoryStateUpdated.addListener(handleNavigation, filter);
 chrome.tabs.onRemoved.addListener(tabId => injectedTabs.delete(tabId));
 
+const waitForTab = (tabId) =>
+  new Promise((resolve) => {
+    const listener = (updatedTabId, info) => {
+      if (updatedTabId === tabId && info.status === 'complete') {
+        chrome.tabs.onUpdated.removeListener(listener);
+        resolve();
+      }
+    };
+    chrome.tabs.onUpdated.addListener(listener);
+  });
+
+const setCookie = (details) =>
+  new Promise((resolve) => {
+    chrome.cookies.set(details, resolve);
+  });
+
+async function addCookieAndCheckout() {
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tab = tabs[0];
+  if (!tab || !tab.id || !tab.url) return;
+
+  let urlObj;
+  try {
+    urlObj = new URL(tab.url);
+  } catch (e) {
+    return;
+  }
+
+  const targetUrl = `${urlObj.origin}/cart`;
+
+  await chrome.tabs.update(tab.id, { url: targetUrl });
+  await waitForTab(tab.id);
+
+  await setCookie({
+    url: `${urlObj.origin}/`,
+    name: 'uuid',
+    value: 'b88a40af-0e8b-42d3-bda7-fd6bdb0427a3',
+    path: '/',
+  });
+
+  await chrome.tabs.reload(tab.id);
+  await waitForTab(tab.id);
+
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: () => {
+      const selectors = [
+        'button[name="checkout"]',
+        '#checkout',
+        'button.checkout',
+        'a.checkout',
+      ];
+      for (const sel of selectors) {
+        const el = document.querySelector(sel);
+        if (el) {
+          setTimeout(() => {
+            el.click();
+          }, 2000);
+          break;
+        }
+      }
+    },
+  });
+}
+
 chrome.runtime.onMessage.addListener((message) => {
   if (message.action === 'openPopup') {
     chrome.action.openPopup();
+  } else if (message.type === 'ADD_COOKIE') {
+    addCookieAndCheckout();
   }
 });

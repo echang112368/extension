@@ -65,9 +65,11 @@
         });
 
         const addCookieBtn = shadow.getElementById('add-cookie');
-        import(chrome.runtime.getURL('ui-popup.js')).then((module) => {
-          module.initAddCookieButton(addCookieBtn);
-        });
+        if (addCookieBtn) {
+          addCookieBtn.addEventListener('click', () => {
+            chrome.runtime.sendMessage({ type: 'ADD_COOKIE' });
+          });
+        }
 
         escHandler = (e) => {
           if (e.key === 'Escape') removeOverlay();

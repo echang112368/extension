@@ -8,6 +8,8 @@
 const injectedTabs = new Set();
 
 function handleNavigation(details) {
+  // Ignore subframe navigations to ensure we inject only on the main page
+  if (details.frameId !== 0) return;
   if (!details.url || !details.url.includes('/checkouts/')) {
     injectedTabs.delete(details.tabId);
     return;

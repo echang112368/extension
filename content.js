@@ -45,25 +45,17 @@
     host.style.all = 'initial';
     const shadow = host.attachShadow({ mode: 'open' });
 
-    fetch(chrome.runtime.getURL('styles.css'))
-      .then(resp => resp.text())
-      .then(css => {
+      Promise.all([
+        fetch(chrome.runtime.getURL('styles.css')).then(resp => resp.text()),
+        fetch(chrome.runtime.getURL('ui-popup.html')).then(resp => resp.text()),
+      ]).then(([css, html]) => {
         const style = document.createElement('style');
         style.textContent = css;
         shadow.appendChild(style);
 
-        const wrapper = document.createElement('div');
-        wrapper.className = 'coupon-wrapper';
-        wrapper.innerHTML = `
-          <div class="coupon-header">
-            <span>Coupons found!</span>
-            <button class="coupon-close" aria-label="Close" tabindex="0">&times;</button>
-          </div>
-          <div class="coupon-body">
-            <button id="add-cookie">Add Cookie</button>
-          </div>
-        `;
-        shadow.appendChild(wrapper);
+        const template = document.createElement('div');
+        template.innerHTML = html;
+        shadow.appendChild(template.firstElementChild);
         document.documentElement.appendChild(host);
 
         const closeBtn = shadow.querySelector('.coupon-close');
@@ -75,6 +67,7 @@
         const addCookieBtn = shadow.getElementById('add-cookie');
         import(chrome.runtime.getURL('ui-popup.js')).then((module) => {
           module.initAddCookieButton(addCookieBtn);
+          module.initAddCookieButton(closeBtn);
         });
 
         escHandler = (e) => {

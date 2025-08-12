@@ -10,7 +10,8 @@
     "webNavigation"
   ],
   "host_permissions": [
-    "*://*/checkouts/*"
+    "*://*/checkouts/*",
+    "*://*/cart*"
   ],
   "action": {
     "default_popup": "hello.html",

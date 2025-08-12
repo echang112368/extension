@@ -5,12 +5,15 @@
  * The extension will display a Hello World overlay on every page you visit.
  */
 
-const injectedTabs = new Set();
+const injectedTabs = new Map();
 
 function handleNavigation(details) {
   // Ignore subframe navigations to ensure we inject only on the main page
   if (details.frameId !== 0) return;
-  if (!details.url || !details.url.includes('/checkouts/')) {
+  if (
+    !details.url ||
+    (!details.url.includes('/checkouts/') && !details.url.includes('/cart'))
+  ) {
     injectedTabs.delete(details.tabId);
     return;
   }
@@ -19,16 +22,17 @@ function handleNavigation(details) {
     injectedTabs.delete(details.tabId);
   }
 
-  if (injectedTabs.has(details.tabId)) return;
+  const lastUrl = injectedTabs.get(details.tabId);
+  if (lastUrl === details.url) return;
 
-  injectedTabs.add(details.tabId);
+  injectedTabs.set(details.tabId, details.url);
   chrome.scripting.executeScript({
     target: { tabId: details.tabId },
     files: ['content.js'],
   });
 }
 
-const filter = { url: [{ urlContains: '/checkouts/' }] };
+const filter = { url: [{ urlContains: '/checkouts/' }, { urlContains: '/cart' }] };
 chrome.webNavigation.onCommitted.addListener(handleNavigation, filter);
 chrome.webNavigation.onHistoryStateUpdated.addListener(handleNavigation, filter);
 chrome.tabs.onRemoved.addListener(tabId => injectedTabs.delete(tabId));
@@ -66,6 +70,7 @@ async function addCookieAndCheckout() {
 
     await chrome.tabs.update(tab.id, { url: targetUrl });
     await waitForTab(tab.id);
+    chrome.tabs.sendMessage(tab.id, { type: 'SHOW_LOADING' });
 
     await setCookie({
       url: `${urlObj.origin}/`,
@@ -76,6 +81,7 @@ async function addCookieAndCheckout() {
 
     await chrome.tabs.reload(tab.id);
     await waitForTab(tab.id);
+    chrome.tabs.sendMessage(tab.id, { type: 'SHOW_LOADING' });
 
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },

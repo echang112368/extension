@@ -6,6 +6,7 @@
     modalResult,
     resultTitle,
     resultDesc;
+  let modalOpenCount = 0;
 
   const MODAL_CSS = `
     #coupon-modal {
@@ -73,9 +74,10 @@
   `;
 
   function showModal() {
-    if (modal) {
+    if (modal && modalOpenCount === 0) {
       modal.classList.add('visible');
       modal.focus();
+      modalOpenCount++;
     }
   }
 
@@ -87,9 +89,10 @@
   }
 
   function hideModal() {
-    if (modal) {
+    if (modal && modalOpenCount > 0) {
       modal.classList.remove('visible');
       resetModal();
+      modalOpenCount--;
     }
   }
 
@@ -124,6 +127,7 @@
     const el = document.getElementById(OVERLAY_ID);
     if (el) {
       el.remove();
+      modalOpenCount = 0;
       logTelemetry('closed');
     }
     if (escHandler) {

@@ -54,54 +54,63 @@ async function addCookieAndCheckout() {
   const tab = tabs[0];
   if (!tab || !tab.id || !tab.url) return;
 
-  let urlObj;
   try {
-    urlObj = new URL(tab.url);
-  } catch (e) {
-    return;
-  }
+    let urlObj;
+    try {
+      urlObj = new URL(tab.url);
+    } catch (e) {
+      return;
+    }
 
-  const targetUrl = `${urlObj.origin}/cart`;
+    const targetUrl = `${urlObj.origin}/cart`;
 
-  await chrome.tabs.update(tab.id, { url: targetUrl });
-  await waitForTab(tab.id);
+    await chrome.tabs.update(tab.id, { url: targetUrl });
+    await waitForTab(tab.id);
 
-  await setCookie({
-    url: `${urlObj.origin}/`,
-    name: 'uuid',
-    value: 'b88a40af-0e8b-42d3-bda7-fd6bdb0427a3',
-    path: '/',
-  });
+    await setCookie({
+      url: `${urlObj.origin}/`,
+      name: 'uuid',
+      value: 'b88a40af-0e8b-42d3-bda7-fd6bdb0427a3',
+      path: '/',
+    });
 
-  await chrome.tabs.reload(tab.id);
-  await waitForTab(tab.id);
+    await chrome.tabs.reload(tab.id);
+    await waitForTab(tab.id);
 
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: () => {
-      const selectors = [
-        'button[name="checkout"]',
-        '#checkout',
-        'button.checkout',
-        'a.checkout',
-      ];
-      for (const sel of selectors) {
-        const el = document.querySelector(sel);
-        if (el) {
-          setTimeout(() => {
-            el.click();
-          }, 2000);
-          break;
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => {
+        const selectors = [
+          'button[name="checkout"]',
+          '#checkout',
+          'button.checkout',
+          'a.checkout',
+        ];
+        for (const sel of selectors) {
+          const el = document.querySelector(sel);
+          if (el) {
+            setTimeout(() => {
+              el.click();
+            }, 2000);
+            break;
+          }
         }
-      }
-    },
-  });
+      },
+    });
+
+    await waitForTab(tab.id);
+    chrome.tabs.sendMessage(tab.id, { type: 'RESULT', status: 'success' });
+  } catch (e) {
+    if (tab.id) {
+      chrome.tabs.sendMessage(tab.id, { type: 'RESULT', status: 'error' });
+    }
+  }
 }
 
-chrome.runtime.onMessage.addListener((message) => {
-  if (message.action === 'openPopup') {
-    chrome.action.openPopup();
-  } else if (message.type === 'ADD_COOKIE') {
+chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (msg?.type === 'ADD_COOKIE') {
     addCookieAndCheckout();
+  } else if (msg?.action === 'openPopup') {
+    chrome.action.openPopup();
   }
 });

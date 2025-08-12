@@ -233,6 +233,9 @@
           resultDesc.textContent = "You're back at checkout with the best we could find.";
         }
       }
+    } else if (msg.type === 'SHOW_LOADING') {
+      resetModal();
+      showModal();
     }
   });
 })();

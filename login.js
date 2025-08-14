@@ -25,7 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
       await new Promise((resolve) => {
         chrome.storage.local.set({ auth: data }, resolve);
       });
-      chrome.runtime.sendMessage({ type: 'LOGIN_SUCCESS', data });
+      await new Promise((resolve) =>
+        chrome.runtime.sendMessage({ type: 'LOGIN_SUCCESS', data }, resolve)
+      );
+      chrome.runtime.sendMessage({ action: 'openPopup' });
       window.close();
     } catch (err) {
       errorDiv.textContent = err.message || 'Login failed';

@@ -8,9 +8,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const render = () => {
     chrome.storage.local.get('auth', ({ auth }) => {
-      if (auth && auth.user) {
-        const name = auth.user.name || auth.user.username || 'User';
-        const points = auth.user.points ?? auth.points ?? 0;
+      const isLoggedIn = !!(auth && (auth.user || auth.token || auth.uuid));
+
+      if (isLoggedIn) {
+        const name =
+          auth?.user?.name ||
+          auth?.user?.username ||
+          auth?.name ||
+          auth?.email ||
+          'User';
+
+        const points = auth?.user?.points ?? auth?.points ?? 0;
+
         nameSpan.textContent = name;
         pointsSpan.textContent = points;
         beforeLogin.style.display = 'none';
@@ -98,6 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg?.type === 'LOGIN_SUCCESS') {
+      render();
+    }
+  });
+
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.auth) {
       render();
     }
   });

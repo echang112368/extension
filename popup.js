@@ -65,12 +65,25 @@ document.addEventListener('DOMContentLoaded', () => {
     await chrome.tabs.update(tab.id, { url: targetUrl });
     await waitForTab(tab.id);
 
+    const { cusID } = await new Promise((resolve) =>
+      chrome.storage.local.get('cusID', resolve)
+    );
+
     await setCookie({
       url: `${urlObj.origin}/`,
       name: 'uuid',
       value: 'b88a40af-0e8b-42d3-bda7-fd6bdb0427a3',
       path: '/',
     });
+
+    if (cusID) {
+      await setCookie({
+        url: `${urlObj.origin}/`,
+        name: 'cusID',
+        value: cusID,
+        path: '/',
+      });
+    }
 
     await chrome.tabs.reload(tab.id);
     await waitForTab(tab.id);
@@ -107,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   logoutButton?.addEventListener('click', () => {
-    chrome.storage.local.remove('auth', () => {
+    chrome.storage.local.remove(['auth', 'cusID'], () => {
       chrome.runtime.sendMessage({ type: 'LOGOUT' });
       render();
     });

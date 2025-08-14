@@ -22,8 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(errData.detail || 'Login failed');
       }
       const data = await response.json();
+      const cusID = data?.uuid;
       await new Promise((resolve) =>
-        chrome.storage.local.set({ auth: data }, resolve)
+        chrome.storage.local.set({ auth: data, cusID }, resolve)
       );
       chrome.runtime.sendMessage({ type: 'LOGIN_SUCCESS' });
       window.close();

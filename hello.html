@@ -1,9 +1,17 @@
 <html>
   <body>
-    <h1>Hello Extensions</h1>
-    <button id="add-cookie">Add Cookie</button>
-    <button id="login">Log In</button>
-    <div id="token"></div>
+    <div id="before-login">
+      <button id="login">Log In</button>
+    </div>
+    <div id="after-login" style="display: none;">
+      <div>
+        Welcome, <span id="user-name"></span>!
+      </div>
+      <div>
+        Points: <span id="user-points"></span>
+      </div>
+      <button id="add-cookie">Add Cookie</button>
+    </div>
     <script src="popup.js"></script>
   </body>
 </html>

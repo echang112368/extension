@@ -22,13 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(errData.detail || 'Login failed');
       }
       const data = await response.json();
-      await new Promise((resolve) => {
-        chrome.storage.local.set({ auth: data }, resolve);
-      });
       await new Promise((resolve) =>
-        chrome.runtime.sendMessage({ type: 'LOGIN_SUCCESS', data }, resolve)
+        chrome.storage.local.set({ auth: data }, resolve)
       );
-      chrome.runtime.sendMessage({ action: 'openPopup' });
+      chrome.runtime.sendMessage({ type: 'LOGIN_SUCCESS' });
       window.close();
     } catch (err) {
       errorDiv.textContent = err.message || 'Login failed';

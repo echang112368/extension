@@ -71,29 +71,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (loginButton) {
-    loginButton.addEventListener('click', async () => {
-      if (tokenDiv) tokenDiv.textContent = '';
-      try {
-        const response = await fetch('https://6f26ddd568cc.ngrok-free.app/api/login-verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: 'demo', password: 'demo' })
-        });
-
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-        const token = data.token || JSON.stringify(data);
-        if (tokenDiv) tokenDiv.textContent = token;
-        if (chrome.storage && chrome.storage.local) {
-          chrome.storage.local.set({ token });
-        }
-      } catch (err) {
-        console.error(err);
-        if (tokenDiv) tokenDiv.textContent = 'Login failed';
-      }
+    loginButton.addEventListener('click', () => {
+      chrome.windows.create({
+        url: chrome.runtime.getURL('login.html'),
+        type: 'popup',
+        width: 480,
+        height: 700,
+      });
     });
   }
 });

@@ -118,5 +118,7 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
     addCookieAndCheckout();
   } else if (msg?.action === 'openPopup') {
     chrome.action.openPopup();
+  } else if (msg?.type === 'LOGIN_SUCCESS') {
+    console.log('User logged in', msg.data);
   }
 });

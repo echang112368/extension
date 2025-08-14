@@ -7,11 +7,14 @@
     "tabs",
     "cookies",
     "scripting",
-    "webNavigation"
+    "webNavigation",
+    "identity",
+    "storage"
   ],
   "host_permissions": [
     "*://*/checkouts/*",
-    "*://*/cart*"
+    "*://*/cart*",
+    "https://6f26ddd568cc.ngrok-free.app/*"
   ],
   "action": {
     "default_popup": "hello.html",
@@ -22,7 +25,7 @@
   },
   "web_accessible_resources": [
     {
-        "resources": ["styles.css", "ui-popup.html"],
+      "resources": ["styles.css", "ui-popup.html"],
       "matches": ["<all_urls>"]
     }
   ],

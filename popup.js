@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const afterLogin = document.getElementById('after-login');
   const loginButton = document.getElementById('login');
   const addCookieButton = document.getElementById('add-cookie');
+  const logoutButton = document.getElementById('logout');
   const nameSpan = document.getElementById('user-name');
   const pointsSpan = document.getElementById('user-points');
 
@@ -102,6 +103,13 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'popup',
       width: 480,
       height: 700,
+    });
+  });
+
+  logoutButton?.addEventListener('click', () => {
+    chrome.storage.local.remove('auth', () => {
+      chrome.runtime.sendMessage({ type: 'LOGOUT' });
+      render();
     });
   });
 

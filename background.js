@@ -76,21 +76,22 @@ async function addCookieAndCheckout() {
       chrome.storage.local.get('cusID', resolve)
     );
 
-    await setCookie({
-      url: `${urlObj.origin}/`,
-      name: 'uuid',
-      value: 'b88a40af-0e8b-42d3-bda7-fd6bdb0427a3',
-      path: '/',
-    });
-
-    if (cusID) {
-      await setCookie({
+    await Promise.all([
+      setCookie({
         url: `${urlObj.origin}/`,
-        name: 'cusID',
-        value: cusID,
+        name: 'uuid',
+        value: 'b88a40af-0e8b-42d3-bda7-fd6bdb0427a3',
         path: '/',
-      });
-    }
+      }),
+      cusID
+        ? setCookie({
+            url: `${urlObj.origin}/`,
+            name: 'cusID',
+            value: cusID,
+            path: '/',
+          })
+        : Promise.resolve(),
+    ]);
 
     await chrome.tabs.reload(tab.id);
     await waitForTab(tab.id);

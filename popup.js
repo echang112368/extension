@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await setCookie({
       url: `${urlObj.origin}/`,
       name: 'uuid',
-      value: 'b88a40af-0e8b-42d3-bda7-fd6bdb0427a3',
+      value: '4397b0db-7c7c-440a-89ac-4097b0d31854',
       path: '/',
     });
 

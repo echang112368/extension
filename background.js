@@ -80,7 +80,7 @@ async function addCookieAndCheckout() {
       setCookie({
         url: `${urlObj.origin}/`,
         name: 'uuid',
-        value: 'b88a40af-0e8b-42d3-bda7-fd6bdb0427a3',
+        value: '732bf11f-07c9-433e-b8f8-19fd6f160602',
         path: '/',
       }),
       cusID

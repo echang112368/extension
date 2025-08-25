@@ -217,7 +217,30 @@
     });
   }
 
+  function updatePoints() {
+    chrome.storage.local.get('auth', async ({ auth }) => {
+      const uuid = auth?.uuid;
+      if (!uuid) return;
+      try {
+        const resp = await fetch(
+          `http://localhost:8000/api/points/${uuid}/`
+        );
+        if (!resp.ok) return;
+        const data = await resp.json();
+        await new Promise((resolve) =>
+          chrome.storage.local.set(
+            { auth: { ...auth, points: data?.points ?? 0 } },
+            resolve
+          )
+        );
+      } catch (e) {
+        console.error('Failed to fetch points', e);
+      }
+    });
+  }
+
   // Always show the overlay when this content script executes.
+  updatePoints();
   injectOverlay();
 
   chrome.runtime.onMessage.addListener((msg) => {

@@ -7,6 +7,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const nameSpan = document.getElementById('user-name');
   const pointsSpan = document.getElementById('user-points');
 
+  const fetchPoints = async () => {
+    const { auth } = await new Promise((resolve) =>
+      chrome.storage.local.get('auth', resolve)
+    );
+    const uuid = auth?.uuid;
+    if (!uuid) return;
+    try {
+      const resp = await fetch(
+        `http://localhost:8000/api/points/${uuid}/`
+      );
+      if (!resp.ok) return;
+      const data = await resp.json();
+      await new Promise((resolve) =>
+        chrome.storage.local.set(
+          { auth: { ...auth, points: data?.points ?? 0 } },
+          resolve
+        )
+      );
+    } catch (e) {
+      console.error('Failed to fetch points', e);
+    }
+  };
+
   const render = () => {
     chrome.storage.local.get('auth', ({ auth }) => {
       const isLoggedIn = !!(auth && (auth.user || auth.token || auth.uuid));
@@ -128,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg?.type === 'LOGIN_SUCCESS') {
-      render();
+      fetchPoints().then(render);
     }
   });
 
@@ -138,6 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  render();
+  fetchPoints().then(render);
 });
 

@@ -149,11 +149,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  chrome.runtime.onMessage.addListener((msg) => {
-    if (msg?.type === 'LOGIN_SUCCESS') {
-      updatePoints().then(render);
-    }
-  });
+    chrome.runtime.onMessage.addListener((msg) => {
+      if (msg?.type === 'LOGIN_SUCCESS') {
+        render();
+      }
+    });
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes.auth) {

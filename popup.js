@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const nameSpan = document.getElementById('user-name');
   const pointsSpan = document.getElementById('user-points');
 
-  const fetchPoints = async () => {
+  const updatePoints = async () => {
     const { auth } = await new Promise((resolve) =>
       chrome.storage.local.get('auth', resolve)
     );
@@ -149,11 +149,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  chrome.runtime.onMessage.addListener((msg) => {
-    if (msg?.type === 'LOGIN_SUCCESS') {
-      fetchPoints().then(render);
-    }
-  });
+    chrome.runtime.onMessage.addListener((msg) => {
+      if (msg?.type === 'LOGIN_SUCCESS') {
+        render();
+      }
+    });
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes.auth) {
@@ -161,6 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  fetchPoints().then(render);
+  updatePoints().then(render);
 });
 

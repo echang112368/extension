@@ -4,6 +4,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const passwordInput = document.getElementById('password');
   const errorDiv = document.getElementById('error');
 
+  const updatePoints = async () => {
+    const { auth } = await new Promise((resolve) =>
+      chrome.storage.local.get('auth', resolve)
+    );
+    const uuid = auth?.uuid;
+    if (!uuid) return;
+    try {
+      const resp = await fetch(
+        `http://localhost:8000/api/points/${uuid}/`
+      );
+      if (!resp.ok) return;
+      const data = await resp.json();
+      await new Promise((resolve) =>
+        chrome.storage.local.set(
+          { auth: { ...auth, points: data?.points ?? 0 } },
+          resolve
+        )
+      );
+    } catch (e) {
+      console.error('Failed to fetch points', e);
+    }
+  };
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorDiv.textContent = '';
@@ -26,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
       await new Promise((resolve) =>
         chrome.storage.local.set({ auth: data, cusID }, resolve)
       );
+      await updatePoints();
       chrome.runtime.sendMessage({ type: 'LOGIN_SUCCESS' });
       window.close();
     } catch (err) {

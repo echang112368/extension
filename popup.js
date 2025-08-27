@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const targetUrl = `${urlObj.origin}/cart`;
+    const targetUrl = `${urlObj.origin}/cart?discounts=FREESHIPPING2025`;
 
     await chrome.tabs.update(tab.id, { url: targetUrl });
     await waitForTab(tab.id);
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
               el.click();
               setTimeout(() => {
-                window.location.href = '/checkout?discount=FREESHIPPING2025';
+                window.location.href = '/checkout?discounts=FREESHIPPING2025';
               }, 1500);
             }, 2000);
             break;

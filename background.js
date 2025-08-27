@@ -66,6 +66,11 @@ async function addCookieAndCheckout() {
       return;
     }
 
+    const discountUrl = `${urlObj.origin}/discount/FREESHIPPING2025`;
+    await chrome.tabs.update(tab.id, { url: discountUrl });
+    await waitForTab(tab.id);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     const targetUrl = `${urlObj.origin}/cart?discounts=FREESHIPPING2025`;
 
     await chrome.tabs.update(tab.id, { url: targetUrl });

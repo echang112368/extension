@@ -125,6 +125,9 @@ document.addEventListener('DOMContentLoaded', () => {
           if (el) {
             setTimeout(() => {
               el.click();
+              setTimeout(() => {
+                window.location.href = '/checkout?discount=FREESHIPPING2025';
+              }, 1500);
             }, 2000);
             break;
           }

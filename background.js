@@ -117,7 +117,10 @@ async function addCookieAndCheckout() {
         }
       },
     });
-
+    await new Promise(resolve => setTimeout(resolve, 3500));
+    await chrome.tabs.update(tab.id, {
+      url: `${urlObj.origin}/checkout?discounts=FREESHIPPING2025`,
+    });
     await waitForTab(tab.id);
     chrome.tabs.sendMessage(tab.id, { type: 'RESULT', status: 'success' });
   } catch (e) {

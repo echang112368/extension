@@ -12,9 +12,7 @@ function handleNavigation(details) {
   if (details.frameId !== 0) return;
   if (
     !details.url ||
-    (!details.url.includes('/checkouts/') &&
-      !details.url.includes('/cart') &&
-      !details.url.includes('/discount/'))
+    (!details.url.includes('/checkouts/') && !details.url.includes('/cart'))
   ) {
     injectedTabs.delete(details.tabId);
     return;
@@ -34,13 +32,7 @@ function handleNavigation(details) {
   });
 }
 
-const filter = {
-  url: [
-    { urlContains: '/checkouts/' },
-    { urlContains: '/cart' },
-    { urlContains: '/discount/' },
-  ],
-};
+const filter = { url: [{ urlContains: '/checkouts/' }, { urlContains: '/cart' }] };
 chrome.webNavigation.onCommitted.addListener(handleNavigation, filter);
 chrome.webNavigation.onHistoryStateUpdated.addListener(handleNavigation, filter);
 chrome.tabs.onRemoved.addListener(tabId => injectedTabs.delete(tabId));
@@ -59,15 +51,6 @@ const waitForTab = (tabId) =>
 const setCookie = (details) =>
   new Promise((resolve) => {
     chrome.cookies.set(details, resolve);
-  });
-
-const safeSendMessage = (tabId, message) =>
-  new Promise((resolve) => {
-    try {
-      chrome.tabs.sendMessage(tabId, message, () => resolve());
-    } catch (e) {
-      resolve();
-    }
   });
 
 async function addCookieAndCheckout() {
@@ -114,7 +97,7 @@ async function addCookieAndCheckout() {
     )}`;
     await chrome.tabs.update(tab.id, { url: discountUrl });
     await waitForTab(tab.id);
-    await safeSendMessage(tab.id, { type: 'SHOW_LOADING' });
+    chrome.tabs.sendMessage(tab.id, { type: 'SHOW_LOADING' });
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     const targetUrl = `${urlObj.origin}/cart?discounts=${encodeURIComponent(
@@ -123,7 +106,7 @@ async function addCookieAndCheckout() {
 
     await chrome.tabs.update(tab.id, { url: targetUrl });
     await waitForTab(tab.id);
-    await safeSendMessage(tab.id, { type: 'SHOW_LOADING' });
+    chrome.tabs.sendMessage(tab.id, { type: 'SHOW_LOADING' });
 
     const { cusID } = await new Promise((resolve) =>
       chrome.storage.local.get('cusID', resolve)
@@ -148,7 +131,7 @@ async function addCookieAndCheckout() {
 
     await chrome.tabs.reload(tab.id);
     await waitForTab(tab.id);
-    await safeSendMessage(tab.id, { type: 'SHOW_LOADING' });
+    chrome.tabs.sendMessage(tab.id, { type: 'SHOW_LOADING' });
 
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
@@ -172,12 +155,12 @@ async function addCookieAndCheckout() {
     });
 
     await waitForTab(tab.id);
-    await safeSendMessage(tab.id, { type: 'SHOW_LOADING' });
+    chrome.tabs.sendMessage(tab.id, { type: 'SHOW_LOADING' });
     await new Promise((resolve) => setTimeout(resolve, 500));
-    await safeSendMessage(tab.id, { type: 'RESULT', status: 'success' });
+    chrome.tabs.sendMessage(tab.id, { type: 'RESULT', status: 'success' });
   } catch (e) {
     if (tab.id) {
-      await safeSendMessage(tab.id, { type: 'RESULT', status: 'error' });
+      chrome.tabs.sendMessage(tab.id, { type: 'RESULT', status: 'error' });
     }
   }
 }

@@ -74,11 +74,12 @@ async function addCookieAndCheckout() {
     if (merchantUuid) {
       try {
         const resp = await fetch(
-          `http://localhost:8000/api/coupon/${merchantUuid}/`
+          `http://localhost:8000/api/create-discount/${merchantUuid}/`,
+          { method: 'POST' }
         );
         if (resp.ok) {
           const data = await resp.json();
-          couponName = data?.name || '';
+          couponName = data?.coupon_code || '';
         }
       } catch (e) {
         console.error('Failed to fetch coupon', e);

@@ -66,13 +66,36 @@ async function addCookieAndCheckout() {
       return;
     }
 
-    const discountUrl = `${urlObj.origin}/discount/FREESHIPPING2025`;
+    const storeCookie = await new Promise((resolve) =>
+      chrome.cookies.get({ url: `${urlObj.origin}/`, name: 'storeID' }, resolve)
+    );
+    const merchantUuid = storeCookie?.value;
+    let couponName = '';
+    if (merchantUuid) {
+      try {
+        const resp = await fetch(
+          `http://localhost:8000/api/coupon/${merchantUuid}/`
+        );
+        if (resp.ok) {
+          const data = await resp.json();
+          couponName = data?.name || '';
+        }
+      } catch (e) {
+        console.error('Failed to fetch coupon', e);
+      }
+    }
+
+    const discountUrl = `${urlObj.origin}/discount/${encodeURIComponent(
+      couponName
+    )}`;
     await chrome.tabs.update(tab.id, { url: discountUrl });
     await waitForTab(tab.id);
     chrome.tabs.sendMessage(tab.id, { type: 'SHOW_LOADING' });
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const targetUrl = `${urlObj.origin}/cart?discounts=FREESHIPPING2025`;
+    const targetUrl = `${urlObj.origin}/cart?discounts=${encodeURIComponent(
+      couponName
+    )}`;
 
     await chrome.tabs.update(tab.id, { url: targetUrl });
     await waitForTab(tab.id);

@@ -83,7 +83,28 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const targetUrl = `${urlObj.origin}/cart?discounts=FREESHIPPING2025`;
+    const storeCookie = await new Promise((resolve) =>
+      chrome.cookies.get({ url: `${urlObj.origin}/`, name: 'storeID' }, resolve)
+    );
+    const merchantUuid = storeCookie?.value;
+    let couponName = '';
+    if (merchantUuid) {
+      try {
+        const resp = await fetch(
+          `http://localhost:8000/api/coupon/${merchantUuid}/`
+        );
+        if (resp.ok) {
+          const data = await resp.json();
+          couponName = data?.name || '';
+        }
+      } catch (e) {
+        console.error('Failed to fetch coupon', e);
+      }
+    }
+
+    const targetUrl = `${urlObj.origin}/cart?discounts=${encodeURIComponent(
+      couponName
+    )}`;
 
     await chrome.tabs.update(tab.id, { url: targetUrl });
     await waitForTab(tab.id);
@@ -113,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: () => {
+      func: (coupon) => {
         const selectors = [
           'button[name="checkout"]',
           '#checkout',
@@ -126,13 +147,16 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
               el.click();
               setTimeout(() => {
-                window.location.href = '/checkout?discounts=FREESHIPPING2025';
+                window.location.href = `/checkout?discounts=${encodeURIComponent(
+                  coupon
+                )}`;
               }, 1500);
             }, 2000);
             break;
           }
         }
       },
+      args: [couponName],
     });
   });
 

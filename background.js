@@ -71,15 +71,21 @@ async function addCookieAndCheckout() {
     );
     const merchantUuid = storeCookie?.value;
     let couponName = '';
+    console.log('Merchant UUID:', merchantUuid);
     if (merchantUuid) {
+      console.log('going to try')
       try {
         const resp = await fetch(
-          `http://localhost:8000/api/create-discount/${merchantUuid}/`,
+          `https://0a1c36ecb4ec.ngrok-free.app/shopify/create-discount/bb60af85-0ebe-49e5-8175-65b37dde57d4/`,
           { method: 'POST' }
+        
         );
+        console.log('sent post')
+        console.log('Response:', resp);
         if (resp.ok) {
           const data = await resp.json();
           couponName = data?.coupon_code || '';
+          console.log('Coupon Name:', couponName);
         }
       } catch (e) {
         console.error('Failed to fetch coupon', e);

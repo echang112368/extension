@@ -23,9 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const data = await response.json();
       const cusID = data?.uuid;
-      await saveAuth(data);
       await new Promise((resolve) =>
-        chrome.storage.local.set({ cusID }, resolve)
+        chrome.storage.local.set({ auth: data, cusID }, resolve)
       );
       chrome.runtime.sendMessage({ type: 'LOGIN_SUCCESS' });
       window.close();

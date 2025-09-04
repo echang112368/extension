@@ -44,13 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const points = auth?.user?.points ?? auth?.points ?? 0;
 
-        nameSpan.textContent = name;
-        pointsSpan.textContent = points;
-        beforeLogin.style.display = 'none';
-        afterLogin.style.display = 'block';
+        if (nameSpan) nameSpan.textContent = name;
+        if (pointsSpan) pointsSpan.textContent = points;
+        if (beforeLogin) beforeLogin.style.display = 'none';
+        if (afterLogin) afterLogin.style.display = 'block';
       } else {
-        beforeLogin.style.display = 'block';
-        afterLogin.style.display = 'none';
+        if (beforeLogin) beforeLogin.style.display = 'block';
+        if (afterLogin) afterLogin.style.display = 'none';
       }
     });
   };

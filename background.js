@@ -173,5 +173,12 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
     chrome.action.openPopup();
   } else if (msg?.type === 'LOGIN_SUCCESS') {
     console.log('User logged in', msg.data);
+  } else if (msg?.type === 'OPEN_LOGIN') {
+    chrome.windows.create({
+      url: chrome.runtime.getURL('login.html'),
+      type: 'popup',
+      width: 480,
+      height: 700,
+    });
   }
 });

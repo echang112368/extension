@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let couponName = '';
     if (merchantUuid) {
       try {
-        const resp = await fetch(
+        const resp = await authFetch(
           `http://localhost:8000/api/create-discount/${merchantUuid}/`,
           { method: 'POST' }
         );

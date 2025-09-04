@@ -5,6 +5,8 @@
  * The extension will display a Hello World overlay on every page you visit.
  */
 
+importScripts('auth.js');
+
 const injectedTabs = new Map();
 
 function handleNavigation(details) {
@@ -75,10 +77,9 @@ async function addCookieAndCheckout() {
     if (merchantUuid) {
       console.log('going to try')
       try {
-        const resp = await fetch(
+        const resp = await authFetch(
           `https://0a1c36ecb4ec.ngrok-free.app/shopify/create-discount/bb60af85-0ebe-49e5-8175-65b37dde57d4/`,
           { method: 'POST' }
-        
         );
         console.log('sent post')
         console.log('Response:', resp);

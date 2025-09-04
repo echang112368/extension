@@ -1,5 +1,3 @@
-importScripts('auth.js');
-
 /**
  * README
  * Load unpacked extension: open chrome://extensions, enable Developer mode,
@@ -77,14 +75,10 @@ async function addCookieAndCheckout() {
     if (merchantUuid) {
       console.log('going to try')
       try {
-        const token = await getValidAccessToken().catch(async () => {
-          await requireLogin();
-          throw new Error('Auth required');
-        });
         const resp = await fetch(
           `https://0a1c36ecb4ec.ngrok-free.app/shopify/create-discount/bb60af85-0ebe-49e5-8175-65b37dde57d4/`,
-          { method: 'POST', headers: { Authorization: `Bearer ${token}` } }
-
+          { method: 'POST' }
+        
         );
         console.log('sent post')
         console.log('Response:', resp);

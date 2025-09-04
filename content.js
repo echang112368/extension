@@ -202,6 +202,38 @@
         });
       }
 
+      const beforeLogin = shadow.getElementById('before-login');
+      const afterLogin = shadow.getElementById('after-login');
+      const loginBtn = shadow.getElementById('login');
+
+      const renderAuth = () => {
+        chrome.storage.local.get('auth', ({ auth }) => {
+          const isLoggedIn = !!(auth && (auth.user || auth.token || auth.uuid));
+          if (beforeLogin) beforeLogin.style.display = isLoggedIn ? 'none' : 'block';
+          if (afterLogin) afterLogin.style.display = isLoggedIn ? 'block' : 'none';
+        });
+      };
+
+      loginBtn?.addEventListener('click', () => {
+        chrome.runtime.sendMessage({ type: 'OPEN_LOGIN' });
+      });
+
+      chrome.runtime.onMessage.addListener((msg) => {
+        if (msg?.type === 'LOGIN_SUCCESS' || msg?.type === 'LOGOUT') {
+          renderAuth();
+          if (msg?.type === 'LOGIN_SUCCESS') updatePoints();
+        }
+      });
+
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'local' && changes.auth) {
+          renderAuth();
+          updatePoints();
+        }
+      });
+
+      renderAuth();
+
       escHandler = (e) => {
         if (e.key === 'Escape') {
           if (isModalVisible()) {

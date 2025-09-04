@@ -7,6 +7,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const nameSpan = document.getElementById('user-name');
   const pointsSpan = document.getElementById('user-points');
 
+  const fetchWithAuth = async (url, options = {}) => {
+    const token = await getValidAccessToken().catch(async () => {
+      await requireLogin();
+      throw new Error('Auth required');
+    });
+    const headers = { ...(options.headers || {}), Authorization: `Bearer ${token}` };
+    return fetch(url, { ...options, headers });
+  };
+
   const updatePoints = async () => {
     const { auth } = await new Promise((resolve) =>
       chrome.storage.local.get('auth', resolve)
@@ -14,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const uuid = auth?.uuid;
     if (!uuid) return;
     try {
-      const resp = await fetch(
+      const resp = await fetchWithAuth(
         `http://localhost:8000/api/points/${uuid}/`
       );
       if (!resp.ok) return;
@@ -90,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let couponName = '';
     if (merchantUuid) {
       try {
-        const resp = await fetch(
+        const resp = await fetchWithAuth(
           `http://localhost:8000/api/create-discount/${merchantUuid}/`,
           { method: 'POST' }
         );

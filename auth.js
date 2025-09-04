@@ -33,8 +33,12 @@ async function authFetch(url, options = {}) {
     if (resp.ok) {
       const data = await resp.json();
       access = data?.access;
+      const newRefresh = data?.refresh || refresh;
       await new Promise((resolve) =>
-        chrome.storage.local.set({ auth: { ...auth, access } }, resolve)
+        chrome.storage.local.set(
+          { auth: { ...auth, access, refresh: newRefresh } },
+          resolve
+        )
       );
     } else {
       await new Promise((resolve) =>

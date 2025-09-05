@@ -38,6 +38,11 @@ const filter = { url: [{ urlContains: '/checkouts/' }, { urlContains: '/cart' }]
 chrome.webNavigation.onCommitted.addListener(handleNavigation, filter);
 chrome.webNavigation.onHistoryStateUpdated.addListener(handleNavigation, filter);
 chrome.tabs.onRemoved.addListener(tabId => injectedTabs.delete(tabId));
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.url) {
+    handleNavigation({ tabId, frameId: 0, url: tab.url });
+  }
+});
 
 const waitForTab = (tabId) =>
   new Promise((resolve) => {

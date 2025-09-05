@@ -301,11 +301,22 @@
     });
   }
 
-  // Always show the overlay when this content script executes unless a specific cookie is present.
+  // Show the overlay when we have a UUID that does not match the
+  // specific opt-out value. Some stores set or update the UUID cookie
+  // asynchronously after the page loads, so if we see the opt-out value
+  // initially we keep checking until it changes.
   const existingUuid = getUuidCookie();
   updatePoints();
   if (existingUuid !== SPECIFIC_UUID) {
     injectOverlay();
+  } else {
+    const uuidMonitor = setInterval(() => {
+      const currentUuid = getUuidCookie();
+      if (currentUuid && currentUuid !== SPECIFIC_UUID) {
+        clearInterval(uuidMonitor);
+        injectOverlay();
+      }
+    }, 1000);
   }
 
   chrome.runtime.onMessage.addListener((msg) => {

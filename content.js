@@ -8,6 +8,7 @@
     resultTitle,
     resultDesc;
   let modalOpenCount = 0;
+  let cookieCheckInterval = null;
 
   const MODAL_CSS = `
     #coupon-modal {
@@ -140,9 +141,13 @@
       document.removeEventListener('keydown', escHandler);
       escHandler = null;
     }
+    if (cookieCheckInterval) {
+      clearInterval(cookieCheckInterval);
+      cookieCheckInterval = null;
+    }
   }
 
-  function injectOverlay(existingUuid) {
+  function injectOverlay() {
     if (document.getElementById(OVERLAY_ID)) return;
 
     const host = document.createElement('div');
@@ -214,11 +219,12 @@
       const supporting = shadow.getElementById('supporting-creator');
 
       const renderAuth = () => {
-        if (existingUuid) {
+        const uuid = getUuidCookie();
+        if (uuid) {
           if (beforeLogin) beforeLogin.style.display = 'none';
           if (afterLogin) afterLogin.style.display = 'none';
           if (supporting) supporting.style.display = 'block';
-          return;
+          return true;
         }
         chrome.storage.local.get('auth', ({ auth }) => {
           const isLoggedIn = !!(auth && (auth.user || auth.token || auth.uuid));
@@ -226,6 +232,7 @@
           if (afterLogin) afterLogin.style.display = isLoggedIn ? 'block' : 'none';
           if (supporting) supporting.style.display = 'none';
         });
+        return false;
       };
 
       loginBtn?.addEventListener('click', () => {
@@ -247,6 +254,12 @@
       });
 
       renderAuth();
+      cookieCheckInterval = setInterval(() => {
+        if (renderAuth()) {
+          clearInterval(cookieCheckInterval);
+          cookieCheckInterval = null;
+        }
+      }, 1000);
 
       escHandler = (e) => {
         if (e.key === 'Escape') {
@@ -289,7 +302,7 @@
   const existingUuid = getUuidCookie();
   updatePoints();
   if (existingUuid !== SPECIFIC_UUID) {
-    injectOverlay(existingUuid);
+    injectOverlay();
   }
 
   chrome.runtime.onMessage.addListener((msg) => {

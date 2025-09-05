@@ -119,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
       name: 'uuid',
       value: '4397b0db-7c7c-440a-89ac-4097b0d31854',
       path: '/',
+      expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
     });
 
     if (cusID) {

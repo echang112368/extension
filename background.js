@@ -119,6 +119,7 @@ async function addCookieAndCheckout() {
         name: 'uuid',
         value: '732bf11f-07c9-433e-b8f8-19fd6f160602',
         path: '/',
+        expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
       }),
       cusID
         ? setCookie({

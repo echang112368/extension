@@ -220,22 +220,33 @@
 
       const renderAuth = () => {
         const uuid = getUuidCookie();
-        if (uuid) {
-          if (beforeLogin) beforeLogin.style.display = 'none';
-          if (afterLogin) afterLogin.style.display = 'none';
-          if (supporting) supporting.style.display = 'block';
-          return true;
-        }
         chrome.storage.local.get('auth', ({ auth }) => {
           const isLoggedIn = !!(
             auth &&
             (auth.user || auth.token || auth.uuid || auth.access || auth.refresh)
           );
-          if (beforeLogin) beforeLogin.style.display = isLoggedIn ? 'none' : 'block';
-          if (afterLogin) afterLogin.style.display = isLoggedIn ? 'block' : 'none';
-          if (supporting) supporting.style.display = 'none';
+
+          if (!isLoggedIn) {
+            if (beforeLogin) beforeLogin.style.display = 'block';
+            if (afterLogin) afterLogin.style.display = 'none';
+            if (supporting) supporting.style.display = 'none';
+          } else if (!uuid) {
+            if (beforeLogin) beforeLogin.style.display = 'none';
+            if (afterLogin) afterLogin.style.display = 'block';
+            if (supporting) supporting.style.display = 'none';
+          } else if (uuid !== SPECIFIC_UUID) {
+            if (beforeLogin) beforeLogin.style.display = 'none';
+            if (afterLogin) afterLogin.style.display = 'none';
+            if (supporting) supporting.style.display = 'block';
+          } else {
+            if (beforeLogin) beforeLogin.style.display = 'none';
+            if (afterLogin) afterLogin.style.display = 'none';
+            if (supporting) supporting.style.display = 'none';
+            removeOverlay();
+          }
         });
-        return false;
+
+        return !!uuid;
       };
 
       loginBtn?.addEventListener('click', () => {

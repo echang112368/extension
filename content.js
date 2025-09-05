@@ -1,5 +1,6 @@
 (() => {
   const OVERLAY_ID = 'coupon-overlay-root';
+  const SPECIFIC_UUID = '732bf11f-07c9-433e-b8f8-19fd6f160602';
   let escHandler = null;
   let modal,
     modalLoading,
@@ -104,6 +105,11 @@
     console.log(`[coupon-overlay] ${event}`);
   }
 
+  function getUuidCookie() {
+    const match = document.cookie.match(/(?:^|; )uuid=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
   function hasCouponInput() {
     const input = document.querySelector(
       'input[name="checkout[reduction_code]"], input[name="reductionCode"], input[name*="discount"], input[name*="coupon"]'
@@ -136,7 +142,7 @@
     }
   }
 
-  function injectOverlay() {
+  function injectOverlay(existingUuid) {
     if (document.getElementById(OVERLAY_ID)) return;
 
     const host = document.createElement('div');
@@ -205,12 +211,20 @@
       const beforeLogin = shadow.getElementById('before-login');
       const afterLogin = shadow.getElementById('after-login');
       const loginBtn = shadow.getElementById('login');
+      const supporting = shadow.getElementById('supporting-creator');
 
       const renderAuth = () => {
+        if (existingUuid) {
+          if (beforeLogin) beforeLogin.style.display = 'none';
+          if (afterLogin) afterLogin.style.display = 'none';
+          if (supporting) supporting.style.display = 'block';
+          return;
+        }
         chrome.storage.local.get('auth', ({ auth }) => {
           const isLoggedIn = !!(auth && (auth.user || auth.token || auth.uuid));
           if (beforeLogin) beforeLogin.style.display = isLoggedIn ? 'none' : 'block';
           if (afterLogin) afterLogin.style.display = isLoggedIn ? 'block' : 'none';
+          if (supporting) supporting.style.display = 'none';
         });
       };
 
@@ -271,9 +285,12 @@
     });
   }
 
-  // Always show the overlay when this content script executes.
+  // Always show the overlay when this content script executes unless a specific cookie is present.
+  const existingUuid = getUuidCookie();
   updatePoints();
-  injectOverlay();
+  if (existingUuid !== SPECIFIC_UUID) {
+    injectOverlay(existingUuid);
+  }
 
   chrome.runtime.onMessage.addListener((msg) => {
     if (!msg) return;

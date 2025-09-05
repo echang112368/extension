@@ -227,7 +227,10 @@
           return true;
         }
         chrome.storage.local.get('auth', ({ auth }) => {
-          const isLoggedIn = !!(auth && (auth.user || auth.token || auth.uuid));
+          const isLoggedIn = !!(
+            auth &&
+            (auth.user || auth.token || auth.uuid || auth.access || auth.refresh)
+          );
           if (beforeLogin) beforeLogin.style.display = isLoggedIn ? 'none' : 'block';
           if (afterLogin) afterLogin.style.display = isLoggedIn ? 'block' : 'none';
           if (supporting) supporting.style.display = 'none';

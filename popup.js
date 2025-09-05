@@ -32,7 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const render = () => {
     chrome.storage.local.get('auth', ({ auth }) => {
-      const isLoggedIn = !!(auth && (auth.user || auth.token || auth.uuid));
+      const isLoggedIn = !!(
+        auth &&
+        (auth.user || auth.token || auth.uuid || auth.access || auth.refresh)
+      );
 
       if (isLoggedIn) {
         const name =

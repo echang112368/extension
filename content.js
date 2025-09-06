@@ -9,6 +9,7 @@
     resultDesc;
   let modalOpenCount = 0;
   let cookieCheckInterval = null;
+  const creatorCache = {};
 
   const MODAL_CSS = `
     #coupon-modal {
@@ -217,6 +218,26 @@
       const afterLogin = shadow.getElementById('after-login');
       const loginBtn = shadow.getElementById('login');
       const supporting = shadow.getElementById('supporting-creator');
+      const creatorNameSpan = supporting?.querySelector('#creator-name');
+
+      async function fetchCreatorName(uuid) {
+        if (!uuid) return 'creator';
+        if (creatorCache[uuid]) return creatorCache[uuid];
+        try {
+          const resp = await authFetch(
+            `http://localhost:8000/api/creators/${uuid}/`
+          );
+          if (!resp.ok) return 'creator';
+          const data = await resp.json();
+          const name =
+            data?.name || data?.username || data?.creator_name || 'creator';
+          creatorCache[uuid] = name;
+          return name;
+        } catch (e) {
+          console.error('Failed to fetch creator', e);
+          return 'creator';
+        }
+      }
 
       const renderAuth = () => {
         const uuid = getUuidCookie();
@@ -237,7 +258,12 @@
           } else if (uuid !== SPECIFIC_UUID) {
             if (beforeLogin) beforeLogin.style.display = 'none';
             if (afterLogin) afterLogin.style.display = 'none';
-            if (supporting) supporting.style.display = 'block';
+            if (supporting) {
+              supporting.style.display = 'block';
+              fetchCreatorName(uuid).then((name) => {
+                if (creatorNameSpan) creatorNameSpan.textContent = name;
+              });
+            }
           } else {
             if (beforeLogin) beforeLogin.style.display = 'none';
             if (afterLogin) afterLogin.style.display = 'none';

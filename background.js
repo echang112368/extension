@@ -30,7 +30,7 @@ function handleNavigation(details) {
   injectedTabs.set(details.tabId, details.url);
   chrome.scripting.executeScript({
     target: { tabId: details.tabId },
-    files: ['content.js'],
+    files: ['auth.js', 'content.js'],
   });
 }
 

@@ -124,7 +124,7 @@ async function addCookieAndCheckout() {
         setCookie({
           url: `${urlObj.origin}/`,
           name: 'uuid',
-          value: '732bf11f-07c9-433e-b8f8-19fd6f160602',
+          value: '733d0d67-6a30-4c48-a92e-b8e211b490f5',
           path: '/',
           expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
         })

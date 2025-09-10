@@ -1,6 +1,6 @@
 (() => {
   const OVERLAY_ID = 'coupon-overlay-root';
-  const SPECIFIC_UUID = '732bf11f-07c9-433e-b8f8-19fd6f160602';
+  const SPECIFIC_UUID = '733d0d67-6a30-4c48-a92e-b8e211b490f5';
   let escHandler = null;
   let modal,
     modalLoading,

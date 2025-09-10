@@ -1,6 +1,7 @@
 (() => {
   const OVERLAY_ID = 'coupon-overlay-root';
   const SPECIFIC_UUID = '733d0d67-6a30-4c48-a92e-b8e211b490f5';
+  const NO_DISCOUNT_UUID = 'n/a';
   let escHandler = null;
   let modal,
     modalLoading,
@@ -255,7 +256,7 @@
             if (beforeLogin) beforeLogin.style.display = 'none';
             if (afterLogin) afterLogin.style.display = 'block';
             if (supporting) supporting.style.display = 'none';
-          } else if (uuid !== SPECIFIC_UUID) {
+          } else if (uuid !== SPECIFIC_UUID && uuid !== NO_DISCOUNT_UUID) {
             if (beforeLogin) beforeLogin.style.display = 'none';
             if (afterLogin) afterLogin.style.display = 'none';
             if (supporting) {
@@ -339,17 +340,21 @@
   }
 
   // Show the overlay when we have a UUID that does not match the
-  // specific opt-out value. Some stores set or update the UUID cookie
-  // asynchronously after the page loads, so if we see the opt-out value
-  // initially we keep checking until it changes.
+  // specific opt-out value or the no-discount value. Some stores set or
+  // update the UUID cookie asynchronously after the page loads, so if we
+  // see one of these values initially we keep checking until it changes.
   const existingUuid = getUuidCookie();
   updatePoints();
-  if (existingUuid !== SPECIFIC_UUID) {
+  if (existingUuid !== SPECIFIC_UUID && existingUuid !== NO_DISCOUNT_UUID) {
     injectOverlay();
   } else {
     const uuidMonitor = setInterval(() => {
       const currentUuid = getUuidCookie();
-      if (currentUuid && currentUuid !== SPECIFIC_UUID) {
+      if (
+        currentUuid &&
+        currentUuid !== SPECIFIC_UUID &&
+        currentUuid !== NO_DISCOUNT_UUID
+      ) {
         clearInterval(uuidMonitor);
         injectOverlay();
       }

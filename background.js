@@ -119,17 +119,18 @@ async function addCookieAndCheckout() {
     );
 
     const cookieTasks = [];
-    if (couponName) {
-      cookieTasks.push(
-        setCookie({
-          url: `${urlObj.origin}/`,
-          name: 'uuid',
-          value: '733d0d67-6a30-4c48-a92e-b8e211b490f5',
-          path: '/',
-          expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
-        })
-      );
-    }
+    const uuidValue = couponName
+      ? '733d0d67-6a30-4c48-a92e-b8e211b490f5'
+      : 'n/a';
+    cookieTasks.push(
+      setCookie({
+        url: `${urlObj.origin}/`,
+        name: 'uuid',
+        value: uuidValue,
+        path: '/',
+        expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+      })
+    );
 
     if (cusID) {
       cookieTasks.push(

@@ -128,7 +128,7 @@ async function addCookieAndCheckout() {
         name: 'uuid',
         value: uuidValue,
         path: '/',
-        expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+        expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 12,
       })
     );
 

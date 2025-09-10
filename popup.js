@@ -117,13 +117,15 @@ document.addEventListener('DOMContentLoaded', () => {
       chrome.storage.local.get('cusID', resolve)
     );
 
-    await setCookie({
-      url: `${urlObj.origin}/`,
-      name: 'uuid',
-      value: '4397b0db-7c7c-440a-89ac-4097b0d31854',
-      path: '/',
-      expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
-    });
+    if (couponName) {
+      await setCookie({
+        url: `${urlObj.origin}/`,
+        name: 'uuid',
+        value: '4397b0db-7c7c-440a-89ac-4097b0d31854',
+        path: '/',
+        expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+      });
+    }
 
     if (cusID) {
       await setCookie({

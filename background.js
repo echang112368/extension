@@ -118,23 +118,31 @@ async function addCookieAndCheckout() {
       chrome.storage.local.get('cusID', resolve)
     );
 
-    await Promise.all([
-      setCookie({
-        url: `${urlObj.origin}/`,
-        name: 'uuid',
-        value: '732bf11f-07c9-433e-b8f8-19fd6f160602',
-        path: '/',
-        expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
-      }),
-      cusID
-        ? setCookie({
-            url: `${urlObj.origin}/`,
-            name: 'cusID',
-            value: cusID,
-            path: '/',
-          })
-        : Promise.resolve(),
-    ]);
+    const cookieTasks = [];
+    if (couponName) {
+      cookieTasks.push(
+        setCookie({
+          url: `${urlObj.origin}/`,
+          name: 'uuid',
+          value: '732bf11f-07c9-433e-b8f8-19fd6f160602',
+          path: '/',
+          expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+        })
+      );
+    }
+
+    if (cusID) {
+      cookieTasks.push(
+        setCookie({
+          url: `${urlObj.origin}/`,
+          name: 'cusID',
+          value: cusID,
+          path: '/',
+        })
+      );
+    }
+
+    await Promise.all(cookieTasks);
 
     await chrome.tabs.reload(tab.id);
     await waitForTab(tab.id);

@@ -12,11 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
       chrome.storage.local.get('auth', resolve)
     );
     const uuid = auth?.uuid;
-    if (!uuid) return;
+    const refresh = auth?.refresh;
+    if (!uuid || !refresh) return;
     try {
-      const resp = await fetch(
-        `http://localhost:8000/api/points/${uuid}/`
-      );
+      const resp = await fetch(`http://localhost:8000/api/points/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uuid, refresh }),
+      });
       if (!resp.ok) return;
       const data = await resp.json();
       await new Promise((resolve) =>

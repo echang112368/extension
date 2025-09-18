@@ -14,7 +14,7 @@
   "host_permissions": [
     "*://*/checkouts/*",
     "*://*/cart*",
-    "https://6f26ddd568cc.ngrok-free.app/*",
+    "https://af8a61e2e155.ngrok-free.app/*",
     "http://localhost:8000/*"
   ],
   "action": {

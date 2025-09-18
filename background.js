@@ -129,7 +129,7 @@ async function addCookieAndCheckout() {
       console.log('going to try')
       try {
         const resp = await authFetch(
-          `https://0a1c36ecb4ec.ngrok-free.app/shopify/create-discount/${merchantUuid}/`,
+          `https://af8a61e2e155.ngrok-free.app/shopify/create-discount/${merchantUuid}/`,
           { method: 'POST' }
         );
         console.log('sent post')

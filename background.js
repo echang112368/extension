@@ -60,6 +60,52 @@ const setCookie = (details) =>
     chrome.cookies.set(details, resolve);
   });
 
+const buildCookieUrl = (cookie) => {
+  if (!cookie?.domain) return null;
+  const domain = cookie.domain.replace(/^\./, '');
+  if (!domain) return null;
+  const protocol = cookie.secure ? 'https' : 'http';
+  const path = cookie.path || '/';
+  return `${protocol}://${domain}${path}`;
+};
+
+chrome.cookies.onChanged.addListener((changeInfo) => {
+  const { cookie, removed } = changeInfo;
+  if (removed || !cookie || cookie.name !== 'uuid') return;
+
+  const url = buildCookieUrl(cookie);
+  if (!url) return;
+
+  const cookieDetails = {
+    url,
+    name: 'cusID',
+    value: cookie.value,
+    path: cookie.path || '/',
+    storeId: cookie.storeId,
+  };
+
+  if (!cookie.hostOnly && cookie.domain) {
+    cookieDetails.domain = cookie.domain;
+  }
+  if (cookie.secure) {
+    cookieDetails.secure = true;
+  }
+  if (cookie.httpOnly) {
+    cookieDetails.httpOnly = true;
+  }
+  if (cookie.sameSite && cookie.sameSite !== 'unspecified') {
+    cookieDetails.sameSite = cookie.sameSite;
+  }
+  if (!cookie.session && cookie.expirationDate) {
+    cookieDetails.expirationDate = cookie.expirationDate;
+  }
+  if (cookie.partitionKey) {
+    cookieDetails.partitionKey = cookie.partitionKey;
+  }
+
+  setCookie(cookieDetails);
+});
+
 async function addCookieAndCheckout() {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   const tab = tabs[0];
@@ -122,26 +168,27 @@ async function addCookieAndCheckout() {
     const uuidValue = couponName
       ? '733d0d67-6a30-4c48-a92e-b8e211b490f5'
       : 'n/a';
+    const cookieBaseDetails = {
+      url: `${urlObj.origin}/`,
+      path: '/',
+      expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 12,
+    };
+
     cookieTasks.push(
       setCookie({
-        url: `${urlObj.origin}/`,
+        ...cookieBaseDetails,
         name: 'uuid',
         value: uuidValue,
-        path: '/',
-        expirationDate: Math.floor(Date.now() / 1000) + 60 * 60 * 12,
       })
     );
 
-    if (cusID) {
-      cookieTasks.push(
-        setCookie({
-          url: `${urlObj.origin}/`,
-          name: 'cusID',
-          value: cusID,
-          path: '/',
-        })
-      );
-    }
+    cookieTasks.push(
+      setCookie({
+        ...cookieBaseDetails,
+        name: 'cusID',
+        value: cusID || uuidValue,
+      })
+    );
 
     await Promise.all(cookieTasks);
 

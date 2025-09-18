@@ -186,11 +186,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-    chrome.runtime.onMessage.addListener((msg) => {
-      if (msg?.type === 'LOGIN_SUCCESS') {
-        render();
-      }
-    });
+  const refreshPointsAndRender = () => updatePoints().then(render);
+
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg?.type === 'LOGIN_SUCCESS') {
+      refreshPointsAndRender();
+    }
+  });
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes.auth) {
@@ -198,6 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  updatePoints().then(render);
+  refreshPointsAndRender();
 });
 

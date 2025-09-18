@@ -22,11 +22,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       if (!resp.ok) return;
       const data = await resp.json();
+      const points = data?.points ?? 0;
+      const updatedAuth = {
+        ...auth,
+        points,
+        user: auth?.user ? { ...auth.user, points } : auth?.user,
+      };
+
       await new Promise((resolve) =>
-        chrome.storage.local.set(
-          { auth: { ...auth, points: data?.points ?? 0 } },
-          resolve
-        )
+        chrome.storage.local.set({ auth: updatedAuth }, resolve)
       );
     } catch (e) {
       console.error('Failed to fetch points', e);

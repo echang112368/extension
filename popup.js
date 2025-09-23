@@ -81,6 +81,37 @@ document.addEventListener('DOMContentLoaded', () => {
       chrome.cookies.set(details, resolve);
     });
 
+  const setCusIdCookieForActiveTab = async () => {
+    const { cusID } = await new Promise((resolve) =>
+      chrome.storage.local.get('cusID', resolve)
+    );
+
+    if (!cusID) return;
+
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tab = tabs[0];
+
+    if (!tab?.url) return;
+
+    let urlObj;
+    try {
+      urlObj = new URL(tab.url);
+    } catch (e) {
+      return;
+    }
+
+    try {
+      await setCookie({
+        url: `${urlObj.origin}/`,
+        name: 'cusID',
+        value: cusID,
+        path: '/',
+      });
+    } catch (e) {
+      console.error('Failed to set cusID cookie', e);
+    }
+  };
+
   addCookieButton?.addEventListener('click', async () => {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     const tab = tabs[0];
@@ -195,15 +226,22 @@ document.addEventListener('DOMContentLoaded', () => {
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg?.type === 'LOGIN_SUCCESS') {
       refreshPointsAndRender();
+      setCusIdCookieForActiveTab();
     }
   });
 
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes.auth) {
-      render();
+    if (area === 'local') {
+      if (changes.auth) {
+        render();
+      }
+      if (changes.cusID) {
+        setCusIdCookieForActiveTab();
+      }
     }
   });
 
   refreshPointsAndRender();
+  setCusIdCookieForActiveTab();
 });
 

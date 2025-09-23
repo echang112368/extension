@@ -11,6 +11,7 @@
   let modalOpenCount = 0;
   let cookieCheckInterval = null;
   const creatorCache = {};
+  let hasRequestedCusIdCookie = false;
 
   const MODAL_CSS = `
     #coupon-modal {
@@ -252,10 +253,12 @@
             if (beforeLogin) beforeLogin.style.display = 'block';
             if (afterLogin) afterLogin.style.display = 'none';
             if (supporting) supporting.style.display = 'none';
+            hasRequestedCusIdCookie = false;
           } else if (!uuid) {
             if (beforeLogin) beforeLogin.style.display = 'none';
             if (afterLogin) afterLogin.style.display = 'block';
             if (supporting) supporting.style.display = 'none';
+            hasRequestedCusIdCookie = false;
           } else if (uuid !== SPECIFIC_UUID && uuid !== NO_DISCOUNT_UUID) {
             if (beforeLogin) beforeLogin.style.display = 'none';
             if (afterLogin) afterLogin.style.display = 'none';
@@ -264,11 +267,16 @@
               fetchCreatorName(uuid).then((name) => {
                 if (creatorNameSpan) creatorNameSpan.textContent = name;
               });
+              if (!hasRequestedCusIdCookie) {
+                chrome.runtime.sendMessage({ type: 'SET_CUSID_COOKIE' });
+                hasRequestedCusIdCookie = true;
+              }
             }
           } else {
             if (beforeLogin) beforeLogin.style.display = 'none';
             if (afterLogin) afterLogin.style.display = 'none';
             if (supporting) supporting.style.display = 'none';
+            hasRequestedCusIdCookie = false;
             removeOverlay();
           }
         });

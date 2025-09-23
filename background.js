@@ -60,6 +60,37 @@ const setCookie = (details) =>
     chrome.cookies.set(details, resolve);
   });
 
+async function setCusIdCookieForActiveTab() {
+  const { cusID } = await new Promise((resolve) =>
+    chrome.storage.local.get('cusID', resolve)
+  );
+
+  if (!cusID) return;
+
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tab = tabs[0];
+
+  if (!tab?.url) return;
+
+  let urlObj;
+  try {
+    urlObj = new URL(tab.url);
+  } catch (e) {
+    return;
+  }
+
+  try {
+    await setCookie({
+      url: `${urlObj.origin}/`,
+      name: 'cusID',
+      value: cusID,
+      path: '/',
+    });
+  } catch (e) {
+    console.error('Failed to set cusID cookie', e);
+  }
+}
+
 const buildCookieUrl = (cookie) => {
   if (!cookie?.domain) return null;
   const domain = cookie.domain.replace(/^\./, '');
@@ -194,6 +225,8 @@ async function addCookieAndCheckout() {
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg?.type === 'ADD_COOKIE') {
     addCookieAndCheckout();
+  } else if (msg?.type === 'SET_CUSID_COOKIE') {
+    setCusIdCookieForActiveTab();
   } else if (msg?.action === 'openPopup') {
     chrome.action.openPopup();
   } else if (msg?.type === 'LOGIN_SUCCESS') {

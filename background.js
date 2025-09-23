@@ -69,43 +69,6 @@ const buildCookieUrl = (cookie) => {
   return `${protocol}://${domain}${path}`;
 };
 
-chrome.cookies.onChanged.addListener((changeInfo) => {
-  const { cookie, removed } = changeInfo;
-  if (removed || !cookie || cookie.name !== 'uuid') return;
-
-  const url = buildCookieUrl(cookie);
-  if (!url) return;
-
-  const cookieDetails = {
-    url,
-    name: 'cusID',
-    value: cookie.value,
-    path: cookie.path || '/',
-    storeId: cookie.storeId,
-  };
-
-  if (!cookie.hostOnly && cookie.domain) {
-    cookieDetails.domain = cookie.domain;
-  }
-  if (cookie.secure) {
-    cookieDetails.secure = true;
-  }
-  if (cookie.httpOnly) {
-    cookieDetails.httpOnly = true;
-  }
-  if (cookie.sameSite && cookie.sameSite !== 'unspecified') {
-    cookieDetails.sameSite = cookie.sameSite;
-  }
-  if (!cookie.session && cookie.expirationDate) {
-    cookieDetails.expirationDate = cookie.expirationDate;
-  }
-  if (cookie.partitionKey) {
-    cookieDetails.partitionKey = cookie.partitionKey;
-  }
-
-  setCookie(cookieDetails);
-});
-
 async function addCookieAndCheckout() {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   const tab = tabs[0];
@@ -186,7 +149,7 @@ async function addCookieAndCheckout() {
       setCookie({
         ...cookieBaseDetails,
         name: 'cusID',
-        value: cusID || uuidValue,
+        value: 'f2a6b271-ee79-4241-9765-8bef49aabf24' || uuidValue,
       })
     );
 

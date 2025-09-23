@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
       const { access, refresh, ...rest } = data || {};
       const cusID = rest?.uuid;
+      console.log("rest?.uuid: ", rest?.uuid);
       await new Promise((resolve) =>
         chrome.storage.local.set({ auth: { ...rest, access, refresh }, cusID }, resolve)
       );

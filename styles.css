@@ -3,9 +3,9 @@
   top: 10px;
   right: 10px;
   z-index: 2147483647;
-  background: #fff;
+  background: transparent;
   border: 1px solid #ccc;
-  border-radius: 8px;
+  border-radius: 0;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   font-family: sans-serif;
   animation: fadeIn 0.3s ease;

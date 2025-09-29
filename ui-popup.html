@@ -1,18 +1,24 @@
-<div class="coupon-wrapper">
-  <div class="coupon-header">
-    <span>Coupons found!</span>
-    <button class="coupon-close" aria-label="Close" tabindex="0">&times;</button>
-  </div>
-  <div class="coupon-body">
-    <div id="before-login">
-      <span>Login to earn</span>
-      <button id="login">Log In</button>
-    </div>
-    <div id="after-login" style="display: none;">
-      <button id="add-cookie">Add Cookie</button>
-    </div>
-    <div id="supporting-creator" style="display: none;">
-      <span>You are supporting <span id="creator-name"></span> with this purchase.</span>
-    </div>
+<div class="coupon-wrapper" role="dialog" aria-modal="true">
+  <div class="popup-inner">
+    <header class="popup-header">
+      <div class="brand-mark">
+        <img src="transparent-logo.png" alt="Badger Rewards" />
+      </div>
+      <button class="coupon-close" aria-label="Close" tabindex="0">&times;</button>
+    </header>
+    <main class="popup-content">
+      <section id="before-login" class="state" aria-live="polite">
+        <h1>Coupons found!</h1>
+        <p>Log in to earn rewards on this purchase.</p>
+        <button id="login" class="cta-button primary">Log in</button>
+      </section>
+      <section id="after-login" class="state" style="display: none;" aria-live="polite">
+        <p class="greeting">You're logged in! 🎉</p>
+        <button id="add-cookie" class="cta-button secondary">Add Cookie</button>
+      </section>
+      <section id="supporting-creator" class="state highlight" style="display: none;">
+        <p>You are supporting <span id="creator-name"></span> with this purchase.</p>
+      </section>
+    </main>
   </div>
 </div>

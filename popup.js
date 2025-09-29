@@ -6,39 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const logoutButton = document.getElementById('logout');
   const nameSpan = document.getElementById('user-name');
   const pointsSpan = document.getElementById('user-points');
-  const menuTrigger = document.getElementById('menu-trigger');
-  const menuDropdown = document.getElementById('menu-dropdown');
-  const menuContainer = document.getElementById('menu-container');
-
-  const closeMenu = () => {
-    if (menuDropdown) menuDropdown.classList.remove('is-open');
-    if (menuTrigger) menuTrigger.setAttribute('aria-expanded', 'false');
-  };
-
-  const toggleMenu = (event) => {
-    event?.preventDefault();
-    event?.stopPropagation();
-    if (!menuDropdown || !menuTrigger) return;
-    const willOpen = !menuDropdown.classList.contains('is-open');
-    menuDropdown.classList.toggle('is-open', willOpen);
-    menuTrigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-  };
-
-  menuTrigger?.addEventListener('click', toggleMenu);
-
-  document.addEventListener('click', (event) => {
-    if (!menuContainer) return;
-    if (!menuContainer.contains(event.target)) {
-      closeMenu();
-    }
-  });
-
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      closeMenu();
-    }
-  });
-
   const updatePoints = async () => {
     const { auth } = await new Promise((resolve) =>
       chrome.storage.local.get('auth', resolve)
@@ -86,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const points = auth?.user?.points ?? auth?.points ?? 0;
 
-        if (menuContainer) menuContainer.classList.remove('hidden');
         if (nameSpan) nameSpan.textContent = name;
         if (pointsSpan) {
           const numericPoints = Number(points) || 0;
@@ -95,8 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (beforeLogin) beforeLogin.style.display = 'none';
         if (afterLogin) afterLogin.style.display = 'flex';
       } else {
-        if (menuContainer) menuContainer.classList.add('hidden');
-        closeMenu();
         if (beforeLogin) beforeLogin.style.display = 'flex';
         if (afterLogin) afterLogin.style.display = 'none';
       }
@@ -228,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
   logoutButton?.addEventListener('click', () => {
     chrome.storage.local.remove(['auth', 'cusID'], () => {
       chrome.runtime.sendMessage({ type: 'LOGOUT' });
-      closeMenu();
       render();
     });
   });

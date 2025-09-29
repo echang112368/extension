@@ -21,13 +21,9 @@
       }
 
       body {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        margin: 0;
         padding: 24px;
-      }
-
-      .popup-shell {
+        display: block;
         width: 100%;
         max-width: 320px;
         border-radius: 20px;
@@ -180,39 +176,37 @@
           padding: 16px;
         }
 
-        .popup-shell {
+        body {
           max-width: none;
         }
       }
     </style>
   </head>
   <body>
-    <div class="popup-shell">
-      <div class="popup-inner">
-        <header class="popup-header">
-          <div class="brand-mark">
-            <img src="transparent-logo.png" alt="Badger Rewards" />
-          </div>
-        </header>
-        <main class="popup-content">
-          <section id="before-login" class="state">
-            <h1>Badger Rewards</h1>
-            <p>Earn more when you log in</p>
-            <button id="login" class="cta-button primary">Log in</button>
-          </section>
-          <section id="after-login" class="state" style="display: none;">
-            <p class="greeting">Hi, <span id="user-name">there</span></p>
-            <div class="points-card" aria-live="polite">
-              <span class="trophy" aria-hidden="true">🏆</span>
-              <div>
-                <div class="points-value"><span id="user-points">0</span></div>
-                <div class="points-label">pts</div>
-              </div>
+    <div class="popup-inner">
+      <header class="popup-header">
+        <div class="brand-mark">
+          <img src="transparent-logo.png" alt="Badger Rewards" />
+        </div>
+      </header>
+      <main class="popup-content">
+        <section id="before-login" class="state">
+          <h1>Badger Rewards</h1>
+          <p>Earn more when you log in</p>
+          <button id="login" class="cta-button primary">Log in</button>
+        </section>
+        <section id="after-login" class="state" style="display: none;">
+          <p class="greeting">Hi, <span id="user-name">there</span></p>
+          <div class="points-card" aria-live="polite">
+            <span class="trophy" aria-hidden="true">🏆</span>
+            <div>
+              <div class="points-value"><span id="user-points">0</span></div>
+              <div class="points-label">pts</div>
             </div>
-            <button id="logout" class="logout-button" type="button">Log out</button>
-          </section>
-        </main>
-      </div>
+          </div>
+          <button id="logout" class="logout-button" type="button">Log out</button>
+        </section>
+      </main>
     </div>
     <script src="auth.js"></script>
     <script src="popup.js"></script>

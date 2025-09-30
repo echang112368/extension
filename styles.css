@@ -92,10 +92,23 @@
   color: #111827;
 }
 
-.greeting {
+#after-login.deal {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.deal-title {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.deal-subtitle {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #4b5563;
 }
 
 .highlight {
@@ -130,6 +143,12 @@
 .cta-button.secondary {
   background: #f1efe8;
   color: #111827;
+}
+
+.cta-button.run-badger {
+  background: #fcd965;
+  color: #3d2b05;
+  box-shadow: 0 12px 18px rgba(252, 217, 101, 0.32);
 }
 
 .cta-button:hover {

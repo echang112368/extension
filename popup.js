@@ -59,9 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
           pointsSpan.textContent = numericPoints.toLocaleString('en-US');
         }
         if (beforeLogin) beforeLogin.style.display = 'none';
-        if (afterLogin) afterLogin.style.display = 'block';
+        if (afterLogin) afterLogin.style.display = 'flex';
       } else {
-        if (beforeLogin) beforeLogin.style.display = 'block';
+        if (beforeLogin) beforeLogin.style.display = 'flex';
         if (afterLogin) afterLogin.style.display = 'none';
       }
     });

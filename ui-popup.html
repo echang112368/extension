@@ -1,99 +1,23 @@
 <div class="coupon-wrapper" role="dialog" aria-modal="true">
   <div class="popup-inner">
-    <button class="coupon-close" aria-label="Close" tabindex="0">&times;</button>
     <header class="popup-header">
-      <div class="brand-identity">
-        <div class="brand-logo" aria-hidden="true">
-          <object
-            type="image/svg+xml"
-            data="transparent-logo.html"
-            role="img"
-            aria-label="Badger Rewards logo"
-          >
-            <img src="transparent-logo.png" alt="Badger Rewards logo" />
-          </object>
-        </div>
-        <span class="brand-name">Badger Rewards</span>
+      <div class="brand-mark">
+        <img src="transparent-logo.png" alt="Badger Rewards" />
       </div>
+      <button class="coupon-close" aria-label="Close" tabindex="0">&times;</button>
     </header>
     <main class="popup-content">
-      <section id="before-login" class="state state-card" aria-live="polite">
-        <div class="state-layout">
-          <div class="state-visual" aria-hidden="true">
-            <div class="logo-coin">
-              <object
-                type="image/svg+xml"
-                data="transparent-logo.html"
-                role="img"
-                aria-label="Badger Rewards logo"
-              >
-                <img src="transparent-logo.png" alt="Badger Rewards logo" />
-              </object>
-            </div>
-          </div>
-          <div class="state-body">
-            <p class="state-eyebrow">Coupons Ready</p>
-            <h1 class="state-title">8 Coupons Found!</h1>
-            <p class="state-description">Log in to earn rewards on this purchase.</p>
-            <div class="state-actions">
-              <button id="login" class="cta-button secondary">Log In</button>
-            </div>
-          </div>
-        </div>
+      <section id="before-login" class="state" aria-live="polite">
+        <h1>Coupons found!</h1>
+        <p>Log in to earn rewards on this purchase.</p>
+        <button id="login" class="cta-button primary">Log in</button>
       </section>
-      <section
-        id="after-login"
-        class="state state-card"
-        style="display: none;"
-        aria-live="polite"
-      >
-        <div class="state-layout">
-          <div class="state-visual" aria-hidden="true">
-            <div class="logo-coin">
-              <object
-                type="image/svg+xml"
-                data="transparent-logo.html"
-                role="img"
-                aria-label="Badger Rewards logo"
-              >
-                <img src="transparent-logo.png" alt="Badger Rewards logo" />
-              </object>
-            </div>
-          </div>
-          <div class="state-body">
-            <p class="state-eyebrow">Coupons Ready</p>
-            <h1 class="state-title">8 Coupons Found!</h1>
-            <p class="state-description">We'll test and apply coupons in seconds.</p>
-            <div class="state-actions">
-              <button id="add-cookie" class="cta-button primary">Add Cookies</button>
-            </div>
-            <p class="state-footnote">Let us run the best deals at checkout.</p>
-          </div>
-        </div>
+      <section id="after-login" class="state" style="display: none;" aria-live="polite">
+        <p class="greeting">You're logged in! 🎉</p>
+        <button id="add-cookie" class="cta-button secondary">Add Cookie</button>
       </section>
-      <section
-        id="supporting-creator"
-        class="state state-supporting"
-        style="display: none;"
-      >
-        <div class="supporting-inner">
-          <div class="supporting-logo" aria-hidden="true">
-            <object
-              type="image/svg+xml"
-              data="transparent-logo.html"
-              role="img"
-              aria-label="Badger Rewards logo"
-            >
-              <img src="transparent-logo.png" alt="Badger Rewards logo" />
-            </object>
-          </div>
-          <h2 class="supporting-title">
-            YOU'RE SUPPORTING <span id="creator-name"></span>!
-          </h2>
-          <p class="supporting-description">
-            Thanks for helping your favorite creator earn rewards.
-          </p>
-        </div>
+      <section id="supporting-creator" class="state highlight" style="display: none;">
+        <p>You are supporting <span id="creator-name"></span> with this purchase.</p>
       </section>
     </main>
   </div>

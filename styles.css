@@ -8,7 +8,7 @@
   box-shadow: 0 24px 40px rgba(17, 24, 39, 0.15);
   font-family: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   color: #111827;
-  width: 320px;
+  width: 520px;
   max-width: calc(100vw - 32px);
   border: none;
   overflow: hidden;
@@ -123,6 +123,46 @@
   line-height: 1.4;
 }
 
+.supporting-state {
+  background: #ffffff;
+  border: 1px solid #efece4;
+  position: relative;
+}
+
+.supporting-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+}
+
+.supporting-logo {
+  width: 96px;
+  height: auto;
+}
+
+.supporting-illustration {
+  width: 112px;
+  height: auto;
+}
+
+.supporting-message {
+  flex: 1;
+  background: #fcd965;
+  border-radius: 16px;
+  padding: 24px;
+  color: #3d2b05;
+  box-shadow: 0 12px 18px rgba(252, 217, 101, 0.32);
+}
+
+.supporting-message p {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.4;
+  font-weight: 700;
+  text-align: left;
+}
+
 .cta-button {
   border: none;
   border-radius: 999px;
@@ -180,5 +220,18 @@
 
   .popup-inner {
     padding: 20px;
+  }
+
+  .supporting-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .supporting-message {
+    width: 100%;
+  }
+
+  .supporting-message p {
+    text-align: center;
   }
 }

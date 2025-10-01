@@ -8,7 +8,7 @@
   box-shadow: 0 24px 40px rgba(17, 24, 39, 0.15);
   font-family: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   color: #111827;
-  width: 320px;
+  width: 520px;
   max-width: calc(100vw - 32px);
   border: none;
   overflow: hidden;
@@ -131,37 +131,36 @@
 
 .supporting-card {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
 }
 
 .supporting-logo {
-  align-self: flex-end;
-  width: 80px;
+  width: 96px;
   height: auto;
 }
 
 .supporting-illustration {
-  width: 96px;
+  width: 120px;
   height: auto;
-  align-self: center;
 }
 
 .supporting-message {
   background: #fcd965;
   border-radius: 16px;
-  padding: 20px;
+  padding: 24px;
   color: #3d2b05;
   box-shadow: 0 12px 18px rgba(252, 217, 101, 0.32);
-  align-self: stretch;
+  flex: 1;
 }
 
 .supporting-message p {
   margin: 0;
-  font-size: 16px;
-  line-height: 1.4;
+  font-size: 20px;
+  line-height: 1.5;
   font-weight: 600;
-  text-align: center;
+  text-align: left;
 }
 
 .cta-button {

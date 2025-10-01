@@ -26,7 +26,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["styles.css", "ui-popup.html"],
+      "resources": ["styles.css", "ui-popup.html", "transparent-logo.png"],
       "matches": ["<all_urls>"]
     }
   ],

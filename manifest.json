@@ -26,7 +26,12 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["styles.css", "ui-popup.html", "transparent-logo.png"],
+      "resources": [
+        "styles.css",
+        "ui-popup.html",
+        "transparent-logo.png",
+        "party-horn.png"
+      ],
       "matches": ["<all_urls>"]
     }
   ],

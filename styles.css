@@ -123,6 +123,47 @@
   line-height: 1.4;
 }
 
+.supporting-state {
+  background: #ffffff;
+  border: 1px solid #efece4;
+  position: relative;
+}
+
+.supporting-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.supporting-logo {
+  align-self: flex-end;
+  width: 80px;
+  height: auto;
+}
+
+.supporting-illustration {
+  width: 96px;
+  height: auto;
+  align-self: center;
+}
+
+.supporting-message {
+  background: #fcd965;
+  border-radius: 16px;
+  padding: 20px;
+  color: #3d2b05;
+  box-shadow: 0 12px 18px rgba(252, 217, 101, 0.32);
+  align-self: stretch;
+}
+
+.supporting-message p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 600;
+  text-align: center;
+}
+
 .cta-button {
   border: none;
   border-radius: 999px;

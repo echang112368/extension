@@ -172,6 +172,10 @@
       if (brandMarkImg) {
         brandMarkImg.src = chrome.runtime.getURL('transparent-logo.png');
       }
+      const supportingIllustration = template.querySelector('.supporting-illustration');
+      if (supportingIllustration) {
+        supportingIllustration.src = chrome.runtime.getURL('party-horn.png');
+      }
       shadow.appendChild(template.firstElementChild);
       document.documentElement.appendChild(host);
 

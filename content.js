@@ -168,6 +168,10 @@
 
       const template = document.createElement('div');
       template.innerHTML = html;
+      const brandMarkImg = template.querySelector('.brand-mark img');
+      if (brandMarkImg) {
+        brandMarkImg.src = chrome.runtime.getURL('transparent-logo.png');
+      }
       shadow.appendChild(template.firstElementChild);
       document.documentElement.appendChild(host);
 

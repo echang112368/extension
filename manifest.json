@@ -8,14 +8,11 @@
     "cookies",
     "scripting",
     "webNavigation",
-    "identity",
     "storage"
   ],
   "host_permissions": [
     "*://*/checkouts/*",
-    "*://*/cart*",
-    "https://af8a61e2e155.ngrok-free.app/*",
-    "http://localhost:8000/*"
+    "*://*/cart*"
   ],
   "action": {
     "default_popup": "hello.html",

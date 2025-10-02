@@ -16,7 +16,7 @@
   ],
   "action": {
     "default_popup": "hello.html",
-    "default_icon": "hello_extensions.png"
+    "default_icon": "justbadger-logo.png"
   },
   "background": {
     "service_worker": "background.js"
@@ -33,6 +33,6 @@
     }
   ],
   "icons": {
-    "48": "hello_extensions.png"
+    "48": "justbadger-logo.png"
   }
 }

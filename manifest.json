@@ -8,10 +8,13 @@
     "cookies",
     "scripting",
     "webNavigation",
-    "storage"
+    "storage",
+    "alarms"
   ],
   "host_permissions": [
+    "http://localhost:8000/*",
     "*://*/checkouts/*",
+    "*://*/checkout*",
     "*://*/cart*"
   ],
   "action": {

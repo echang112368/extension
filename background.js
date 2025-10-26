@@ -9,13 +9,96 @@ importScripts('auth.js');
 
 const injectedTabs = new Map();
 
-function handleNavigation(details) {
+const MERCHANT_META_URL = 'http://localhost:8000/api/merchant_meta/';
+const MERCHANT_LIST_URL = 'http://localhost:8000/api/merchant_list/';
+const MERCHANT_SYNC_ALARM = 'merchant-sync';
+const MERCHANT_SYNC_PERIOD_MINUTES = 60 * 24 * 7; // once per week
+const MERCHANT_META_CHECK_INTERVAL_MS = MERCHANT_SYNC_PERIOD_MINUTES * 60 * 1000;
+const MERCHANT_LIST_STORAGE_KEY = 'allowedMerchants';
+const MERCHANT_VERSION_STORAGE_KEY = 'merchant_version';
+const MERCHANT_CHECKED_AT_STORAGE_KEY = 'merchant_version_checked_at';
+const MERCHANT_UPDATED_AT_STORAGE_KEY = 'merchant_list_updated_at';
+
+let cachedAllowedMerchants = null;
+
+const storageGet = (keys) =>
+  new Promise((resolve) => {
+    chrome.storage.local.get(keys, resolve);
+  });
+
+const storageSet = (items) =>
+  new Promise((resolve) => {
+    chrome.storage.local.set(items, resolve);
+  });
+
+function updateAllowedMerchantCache(hosts) {
+  if (Array.isArray(hosts)) {
+    cachedAllowedMerchants = hosts;
+  } else if (typeof hosts === 'undefined') {
+    cachedAllowedMerchants = null;
+  } else {
+    cachedAllowedMerchants = [];
+  }
+}
+
+async function loadAllowedMerchantsFromStorage() {
+  const data = await storageGet([MERCHANT_LIST_STORAGE_KEY]);
+  updateAllowedMerchantCache(data[MERCHANT_LIST_STORAGE_KEY]);
+}
+
+function hostMatches(allowedHost, hostname) {
+  if (!allowedHost || !hostname) return false;
+  if (hostname === allowedHost) return true;
+  return hostname.endsWith(`.${allowedHost}`);
+}
+
+async function isAllowedMerchantUrl(url) {
+  let urlObj;
+  try {
+    urlObj = new URL(url);
+  } catch (e) {
+    return false;
+  }
+
+  const hostname = urlObj.hostname;
+
+  if (!cachedAllowedMerchants) {
+    await loadAllowedMerchantsFromStorage();
+  }
+
+  if (!Array.isArray(cachedAllowedMerchants)) {
+    return true;
+  }
+
+  if (cachedAllowedMerchants.length === 0) {
+    return false;
+  }
+
+  return cachedAllowedMerchants.some((allowedHost) =>
+    hostMatches(String(allowedHost).trim().toLowerCase(), hostname.toLowerCase())
+  );
+}
+
+function isCheckoutOrCartUrl(url) {
+  try {
+    const { pathname } = new URL(url);
+    if (!pathname) return false;
+    return pathname.includes('/cart') || pathname.includes('/checkout');
+  } catch (e) {
+    return false;
+  }
+}
+
+async function handleNavigation(details) {
   // Ignore subframe navigations to ensure we inject only on the main page
   if (details.frameId !== 0) return;
-  if (
-    !details.url ||
-    (!details.url.includes('/checkouts/') && !details.url.includes('/cart'))
-  ) {
+
+  if (!details.url || !isCheckoutOrCartUrl(details.url)) {
+    injectedTabs.delete(details.tabId);
+    return;
+  }
+
+  if (!(await isAllowedMerchantUrl(details.url))) {
     injectedTabs.delete(details.tabId);
     return;
   }
@@ -34,14 +117,143 @@ function handleNavigation(details) {
   });
 }
 
-const filter = { url: [{ urlContains: '/checkouts/' }, { urlContains: '/cart' }] };
-chrome.webNavigation.onCommitted.addListener(handleNavigation, filter);
-chrome.webNavigation.onHistoryStateUpdated.addListener(handleNavigation, filter);
-chrome.tabs.onRemoved.addListener(tabId => injectedTabs.delete(tabId));
+const withNavigationHandling = (listener) => (details) => {
+  listener(details).catch((error) => {
+    console.error('Failed to handle navigation', error);
+  });
+};
+
+const filter = {
+  url: [
+    { urlContains: '/checkouts/' },
+    { urlContains: '/checkout' },
+    { urlContains: '/cart' },
+  ],
+};
+
+chrome.webNavigation.onCommitted.addListener(withNavigationHandling(handleNavigation), filter);
+chrome.webNavigation.onHistoryStateUpdated.addListener(
+  withNavigationHandling(handleNavigation),
+  filter,
+);
+chrome.tabs.onRemoved.addListener((tabId) => injectedTabs.delete(tabId));
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
-    handleNavigation({ tabId, frameId: 0, url: tab.url });
+    handleNavigation({ tabId, frameId: 0, url: tab.url }).catch((error) => {
+      console.error('Failed to handle navigation', error);
+    });
   }
+});
+
+function extractAllowedHosts(listResponse) {
+  if (!listResponse) return [];
+  if (Array.isArray(listResponse)) return listResponse;
+  if (Array.isArray(listResponse.allowed_hosts)) return listResponse.allowed_hosts;
+  if (Array.isArray(listResponse.domains)) return listResponse.domains;
+  if (Array.isArray(listResponse.merchants)) return listResponse.merchants;
+  return [];
+}
+
+async function ensureMerchantListUpToDate() {
+  try {
+    const metaResp = await fetch(MERCHANT_META_URL);
+    if (!metaResp.ok) {
+      throw new Error(`Failed to fetch merchant meta: ${metaResp.status}`);
+    }
+
+    const meta = await metaResp.json();
+    const version = meta?.version;
+    if (!version) {
+      throw new Error('Merchant meta response missing version');
+    }
+
+    const storageData = await storageGet([
+      MERCHANT_VERSION_STORAGE_KEY,
+      MERCHANT_LIST_STORAGE_KEY,
+    ]);
+    const storedVersion = storageData[MERCHANT_VERSION_STORAGE_KEY];
+    const now = Date.now();
+
+    if (storedVersion === version) {
+      await storageSet({ [MERCHANT_CHECKED_AT_STORAGE_KEY]: now });
+      return;
+    }
+
+    const listResp = await fetch(MERCHANT_LIST_URL);
+    if (!listResp.ok) {
+      throw new Error(`Failed to fetch merchant list: ${listResp.status}`);
+    }
+
+    const listData = await listResp.json();
+    const allowedHosts = extractAllowedHosts(listData).map((host) =>
+      String(host).trim().toLowerCase(),
+    );
+
+    await storageSet({
+      [MERCHANT_LIST_STORAGE_KEY]: allowedHosts,
+      [MERCHANT_VERSION_STORAGE_KEY]: version,
+      [MERCHANT_CHECKED_AT_STORAGE_KEY]: now,
+      [MERCHANT_UPDATED_AT_STORAGE_KEY]: now,
+    });
+    updateAllowedMerchantCache(allowedHosts);
+  } catch (error) {
+    console.error('Failed to update merchant list', error);
+  }
+}
+
+async function ensureMerchantListUpToDateIfStale() {
+  try {
+    const data = await storageGet([MERCHANT_CHECKED_AT_STORAGE_KEY]);
+    const lastChecked = data[MERCHANT_CHECKED_AT_STORAGE_KEY];
+    const now = Date.now();
+
+    if (typeof lastChecked === 'number' && now - lastChecked < MERCHANT_META_CHECK_INTERVAL_MS) {
+      return;
+    }
+  } catch (error) {
+    console.warn('Unable to determine last merchant list check timestamp', error);
+  }
+
+  return ensureMerchantListUpToDate();
+}
+
+function scheduleMerchantSync() {
+  chrome.alarms.create(MERCHANT_SYNC_ALARM, {
+    delayInMinutes: 1,
+    periodInMinutes: MERCHANT_SYNC_PERIOD_MINUTES,
+  });
+}
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm?.name === MERCHANT_SYNC_ALARM) {
+    ensureMerchantListUpToDate().catch((error) => {
+      console.error('Merchant sync alarm failed', error);
+    });
+  }
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+  scheduleMerchantSync();
+  ensureMerchantListUpToDate().catch((error) => {
+    console.error('Failed to perform initial merchant sync on install', error);
+  });
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  scheduleMerchantSync();
+  ensureMerchantListUpToDateIfStale()?.catch((error) => {
+    console.error('Failed to perform merchant sync on startup', error);
+  });
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'local' && changes[MERCHANT_LIST_STORAGE_KEY]) {
+    updateAllowedMerchantCache(changes[MERCHANT_LIST_STORAGE_KEY].newValue);
+  }
+});
+
+loadAllowedMerchantsFromStorage().catch((error) => {
+  console.error('Failed to load allowed merchants from storage', error);
 });
 
 const waitForTab = (tabId) =>

@@ -14,12 +14,18 @@ const MERCHANT_LIST_URL = 'http://localhost:8000/api/merchant_list/';
 const MERCHANT_SYNC_ALARM = 'merchant-sync';
 const MERCHANT_SYNC_PERIOD_MINUTES = 60 * 24 * 7; // once per week
 const MERCHANT_META_CHECK_INTERVAL_MS = MERCHANT_SYNC_PERIOD_MINUTES * 60 * 1000;
+// We keep a separate poll interval so the minute-based alarm cadence can stay
+// tuned for long-term background syncs while this timer performs the required
+// once-per-second freshness checks.
+const MERCHANT_META_POLL_INTERVAL_MS = 1000;
 const MERCHANT_LIST_STORAGE_KEY = 'allowedMerchants';
 const MERCHANT_VERSION_STORAGE_KEY = 'merchant_version';
 const MERCHANT_CHECKED_AT_STORAGE_KEY = 'merchant_version_checked_at';
 const MERCHANT_UPDATED_AT_STORAGE_KEY = 'merchant_list_updated_at';
+const MERCHANT_VERSION_LOG_STORAGE_KEY = 'merchant_version_log';
 
 let cachedAllowedMerchants = null;
+let isMerchantSyncInFlight = false;
 
 const storageGet = (keys) =>
   new Promise((resolve) => {
@@ -155,6 +161,11 @@ function extractAllowedHosts(listResponse) {
 }
 
 async function ensureMerchantListUpToDate() {
+  if (isMerchantSyncInFlight) {
+    return;
+  }
+
+  isMerchantSyncInFlight = true;
   try {
     const metaResp = await fetch(MERCHANT_META_URL);
     if (!metaResp.ok) {
@@ -176,6 +187,14 @@ async function ensureMerchantListUpToDate() {
 
     if (storedVersion === version) {
       await storageSet({ [MERCHANT_CHECKED_AT_STORAGE_KEY]: now });
+      await recordMerchantVersionLog({
+        timestamp: now,
+        version,
+        updated: false,
+        merchantCount: Array.isArray(storageData[MERCHANT_LIST_STORAGE_KEY])
+          ? storageData[MERCHANT_LIST_STORAGE_KEY].length
+          : null,
+      });
       return;
     }
 
@@ -196,8 +215,16 @@ async function ensureMerchantListUpToDate() {
       [MERCHANT_UPDATED_AT_STORAGE_KEY]: now,
     });
     updateAllowedMerchantCache(allowedHosts);
+    await recordMerchantVersionLog({
+      timestamp: now,
+      version,
+      updated: true,
+      merchantCount: allowedHosts.length,
+    });
   } catch (error) {
     console.error('Failed to update merchant list', error);
+  } finally {
+    isMerchantSyncInFlight = false;
   }
 }
 
@@ -222,6 +249,34 @@ function scheduleMerchantSync() {
     delayInMinutes: 1,
     periodInMinutes: MERCHANT_SYNC_PERIOD_MINUTES,
   });
+}
+
+async function recordMerchantVersionLog(entry) {
+  try {
+    const data = await storageGet([MERCHANT_VERSION_LOG_STORAGE_KEY]);
+    const existingLog = Array.isArray(data[MERCHANT_VERSION_LOG_STORAGE_KEY])
+      ? data[MERCHANT_VERSION_LOG_STORAGE_KEY]
+      : [];
+    const nextLog = existingLog.concat({
+      ...entry,
+      timestamp: entry?.timestamp ?? Date.now(),
+    });
+    const trimmedLog = nextLog.slice(-500);
+    await storageSet({ [MERCHANT_VERSION_LOG_STORAGE_KEY]: trimmedLog });
+  } catch (error) {
+    console.error('Failed to record merchant version log', error);
+  }
+}
+
+function startMerchantMetaPolling() {
+  const poll = () => {
+    ensureMerchantListUpToDate().catch((error) => {
+      console.error('Failed to poll merchant list update', error);
+    });
+  };
+
+  poll();
+  setInterval(poll, MERCHANT_META_POLL_INTERVAL_MS);
 }
 
 chrome.alarms.onAlarm.addListener((alarm) => {
@@ -255,6 +310,8 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 loadAllowedMerchantsFromStorage().catch((error) => {
   console.error('Failed to load allowed merchants from storage', error);
 });
+
+startMerchantMetaPolling();
 
 const waitForTab = (tabId) =>
   new Promise((resolve) => {

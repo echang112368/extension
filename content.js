@@ -78,6 +78,25 @@
     }
   `;
 
+  function isExtensionContextValid() {
+    return Boolean(chrome?.runtime?.id);
+  }
+
+  function runIfExtensionContextValid(action) {
+    if (!isExtensionContextValid()) return;
+    try {
+      action();
+    } catch (error) {
+      if (
+        typeof error?.message === 'string' &&
+        error.message.includes('Extension context invalidated')
+      ) {
+        return;
+      }
+      throw error;
+    }
+  }
+
   function showModal() {
     if (modal && modalOpenCount === 0) {
       modal.classList.add('visible');
@@ -220,7 +239,9 @@
       if (addCookieBtn) {
         addCookieBtn.addEventListener('click', () => {
           showModal();
-          chrome.runtime.sendMessage({ type: 'ADD_COOKIE' });
+          runIfExtensionContextValid(() =>
+            chrome.runtime.sendMessage({ type: 'ADD_COOKIE' })
+          );
         });
       }
 
@@ -250,50 +271,58 @@
       }
 
       const renderAuth = () => {
-        const uuid = getUuidCookie();
-        chrome.storage.local.get('auth', ({ auth }) => {
-          const isLoggedIn = !!(
-            auth &&
-            (auth.user || auth.token || auth.uuid || auth.access || auth.refresh)
-          );
+        if (!isExtensionContextValid()) return false;
 
-          if (!isLoggedIn) {
-            if (beforeLogin) beforeLogin.style.display = 'block';
-            if (afterLogin) afterLogin.style.display = 'none';
-            if (supporting) supporting.style.display = 'none';
-            hasRequestedCusIdCookie = false;
-          } else if (!uuid) {
-            if (beforeLogin) beforeLogin.style.display = 'none';
-            if (afterLogin) afterLogin.style.display = 'block';
-            if (supporting) supporting.style.display = 'none';
-            hasRequestedCusIdCookie = false;
-          } else if (uuid !== SPECIFIC_UUID && uuid !== NO_DISCOUNT_UUID) {
-            if (beforeLogin) beforeLogin.style.display = 'none';
-            if (afterLogin) afterLogin.style.display = 'none';
-            if (supporting) {
-              supporting.style.display = 'block';
-              fetchCreatorName(uuid).then((name) => {
-                if (creatorNameSpan) creatorNameSpan.textContent = name;
-              });
-              if (!hasRequestedCusIdCookie) {
-                chrome.runtime.sendMessage({ type: 'SET_CUSID_COOKIE' });
-                hasRequestedCusIdCookie = true;
+        const uuid = getUuidCookie();
+        runIfExtensionContextValid(() =>
+          chrome.storage.local.get('auth', ({ auth }) => {
+            const isLoggedIn = !!(
+              auth &&
+              (auth.user || auth.token || auth.uuid || auth.access || auth.refresh)
+            );
+
+            if (!isLoggedIn) {
+              if (beforeLogin) beforeLogin.style.display = 'block';
+              if (afterLogin) afterLogin.style.display = 'none';
+              if (supporting) supporting.style.display = 'none';
+              hasRequestedCusIdCookie = false;
+            } else if (!uuid) {
+              if (beforeLogin) beforeLogin.style.display = 'none';
+              if (afterLogin) afterLogin.style.display = 'block';
+              if (supporting) supporting.style.display = 'none';
+              hasRequestedCusIdCookie = false;
+            } else if (uuid !== SPECIFIC_UUID && uuid !== NO_DISCOUNT_UUID) {
+              if (beforeLogin) beforeLogin.style.display = 'none';
+              if (afterLogin) afterLogin.style.display = 'none';
+              if (supporting) {
+                supporting.style.display = 'block';
+                fetchCreatorName(uuid).then((name) => {
+                  if (creatorNameSpan) creatorNameSpan.textContent = name;
+                });
+                if (!hasRequestedCusIdCookie) {
+                  runIfExtensionContextValid(() =>
+                    chrome.runtime.sendMessage({ type: 'SET_CUSID_COOKIE' })
+                  );
+                  hasRequestedCusIdCookie = true;
+                }
               }
+            } else {
+              if (beforeLogin) beforeLogin.style.display = 'none';
+              if (afterLogin) afterLogin.style.display = 'none';
+              if (supporting) supporting.style.display = 'none';
+              hasRequestedCusIdCookie = false;
+              removeOverlay();
             }
-          } else {
-            if (beforeLogin) beforeLogin.style.display = 'none';
-            if (afterLogin) afterLogin.style.display = 'none';
-            if (supporting) supporting.style.display = 'none';
-            hasRequestedCusIdCookie = false;
-            removeOverlay();
-          }
-        });
+          })
+        );
 
         return !!uuid;
       };
 
       loginBtn?.addEventListener('click', () => {
-        chrome.runtime.sendMessage({ type: 'OPEN_LOGIN' });
+        runIfExtensionContextValid(() =>
+          chrome.runtime.sendMessage({ type: 'OPEN_LOGIN' })
+        );
       });
 
       chrome.runtime.onMessage.addListener((msg) => {
@@ -334,29 +363,49 @@
   }
 
   function updatePoints() {
-    chrome.storage.local.get('auth', async ({ auth }) => {
-      const uuid = auth?.uuid;
-      if (!uuid) return;
-      try {
-        const refresh = auth?.refresh;
-        if (!refresh) return;
-        const resp = await fetch(`http://localhost:8000/api/points/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ uuid, refresh }),
-        });
-        if (!resp.ok) return;
-        const data = await resp.json();
-        await new Promise((resolve) =>
-          chrome.storage.local.set(
-            { auth: { ...auth, points: data?.points ?? 0 } },
-            resolve
-          )
-        );
-      } catch (e) {
-        console.error('Failed to fetch points', e);
-      }
-    });
+    if (!isExtensionContextValid()) return;
+
+    runIfExtensionContextValid(() =>
+      chrome.storage.local.get('auth', async ({ auth }) => {
+        const uuid = auth?.uuid;
+        if (!uuid) return;
+        try {
+          const refresh = auth?.refresh;
+          if (!refresh) return;
+          const resp = await fetch(`http://localhost:8000/api/points/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uuid, refresh }),
+          });
+          if (!resp.ok) return;
+          const data = await resp.json();
+          if (!isExtensionContextValid()) return;
+          await new Promise((resolve, reject) => {
+            if (!isExtensionContextValid()) {
+              resolve();
+              return;
+            }
+            try {
+              chrome.storage.local.set(
+                { auth: { ...auth, points: data?.points ?? 0 } },
+                resolve
+              );
+            } catch (error) {
+              if (
+                typeof error?.message === 'string' &&
+                error.message.includes('Extension context invalidated')
+              ) {
+                resolve();
+              } else {
+                reject(error);
+              }
+            }
+          });
+        } catch (e) {
+          console.error('Failed to fetch points', e);
+        }
+      })
+    );
   }
 
   // Show the overlay when we have a UUID that does not match the

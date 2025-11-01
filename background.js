@@ -14,10 +14,6 @@ const MERCHANT_LIST_URL = 'http://localhost:8000/api/merchant_list/';
 const MERCHANT_SYNC_ALARM = 'merchant-sync';
 const MERCHANT_SYNC_PERIOD_MINUTES = 60 * 24 * 7; // once per week
 const MERCHANT_META_CHECK_INTERVAL_MS = MERCHANT_SYNC_PERIOD_MINUTES * 60 * 1000;
-// We keep a separate poll interval so the minute-based alarm cadence can stay
-// tuned for long-term background syncs while this timer performs the required
-// once-per-second freshness checks.
-const MERCHANT_META_POLL_INTERVAL_MS = 1000;
 const MERCHANT_LIST_STORAGE_KEY = 'allowedMerchants';
 const MERCHANT_VERSION_STORAGE_KEY = 'merchant_version';
 const MERCHANT_CHECKED_AT_STORAGE_KEY = 'merchant_version_checked_at';
@@ -268,17 +264,6 @@ async function recordMerchantVersionLog(entry) {
   }
 }
 
-function startMerchantMetaPolling() {
-  const poll = () => {
-    ensureMerchantListUpToDate().catch((error) => {
-      console.error('Failed to poll merchant list update', error);
-    });
-  };
-
-  poll();
-  setInterval(poll, MERCHANT_META_POLL_INTERVAL_MS);
-}
-
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm?.name === MERCHANT_SYNC_ALARM) {
     ensureMerchantListUpToDate().catch((error) => {
@@ -311,7 +296,9 @@ loadAllowedMerchantsFromStorage().catch((error) => {
   console.error('Failed to load allowed merchants from storage', error);
 });
 
-startMerchantMetaPolling();
+ensureMerchantListUpToDateIfStale()?.catch((error) => {
+  console.error('Failed to perform initial merchant sync during startup', error);
+});
 
 const waitForTab = (tabId) =>
   new Promise((resolve) => {

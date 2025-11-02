@@ -26,8 +26,14 @@ let isMerchantSyncInFlight = false;
 const storageGet = (keys) =>
   new Promise((resolve, reject) => {
     chrome.storage.local.get(keys, (items) => {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
+      const lastError = chrome.runtime.lastError;
+      if (lastError) {
+        console.error('chrome.storage.local.get failed', {
+          keys,
+          message: lastError.message,
+          stack: lastError.stack,
+        });
+        reject(lastError);
         return;
       }
       resolve(items || {});
@@ -37,8 +43,14 @@ const storageGet = (keys) =>
 const storageSet = (items) =>
   new Promise((resolve, reject) => {
     chrome.storage.local.set(items, () => {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
+      const lastError = chrome.runtime.lastError;
+      if (lastError) {
+        console.error('chrome.storage.local.set failed', {
+          items,
+          message: lastError.message,
+          stack: lastError.stack,
+        });
+        reject(lastError);
         return;
       }
       resolve();
@@ -305,7 +317,11 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 });
 
 loadAllowedMerchantsFromStorage().catch((error) => {
-  console.error('Failed to load allowed merchants from storage', error);
+  console.error('Failed to load allowed merchants from storage', {
+    error,
+    message: error?.message,
+    stack: error?.stack,
+  });
 });
 
 ensureMerchantListUpToDateIfStale()?.catch((error) => {

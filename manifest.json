@@ -30,7 +30,9 @@
         "styles.css",
         "ui-popup.html",
         "transparent-logo.png",
-        "party-horn.png"
+        "party-horn.png",
+        "auth.js",
+        "content.js"
       ],
       "matches": ["<all_urls>"]
     }

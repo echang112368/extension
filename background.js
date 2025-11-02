@@ -5,7 +5,7 @@
  * The extension will display a Hello World overlay on every page you visit.
  */
 
-importScripts('auth.js');
+importScripts(chrome.runtime.getURL('auth.js'));
 
 const injectedTabs = new Map();
 
@@ -24,13 +24,25 @@ let cachedAllowedMerchants = null;
 let isMerchantSyncInFlight = false;
 
 const storageGet = (keys) =>
-  new Promise((resolve) => {
-    chrome.storage.local.get(keys, resolve);
+  new Promise((resolve, reject) => {
+    chrome.storage.local.get(keys, (items) => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+        return;
+      }
+      resolve(items || {});
+    });
   });
 
 const storageSet = (items) =>
-  new Promise((resolve) => {
-    chrome.storage.local.set(items, resolve);
+  new Promise((resolve, reject) => {
+    chrome.storage.local.set(items, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+        return;
+      }
+      resolve();
+    });
   });
 
 function updateAllowedMerchantCache(hosts) {

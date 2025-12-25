@@ -4,6 +4,21 @@
       <div class="brand-mark">
         <img src="transparent-logo.png" alt="Badger Rewards" />
       </div>
+      <div class="rewards-hud" aria-live="polite">
+        <div class="rewards-cart" data-reward-cart aria-hidden="true">
+          <span class="cart-icon">🛒</span>
+          <span class="cart-glow" aria-hidden="true"></span>
+        </div>
+        <div class="rewards-meter">
+          <div class="meter-track">
+            <div class="meter-fill" data-reward-meter></div>
+          </div>
+          <div class="points-counter">
+            <span class="points-value" data-reward-points>0</span>
+            <span class="points-label">pts</span>
+          </div>
+        </div>
+      </div>
       <button class="coupon-close" aria-label="Close" tabindex="0">&times;</button>
     </header>
     <main class="popup-content">

@@ -2,16 +2,23 @@
   const OVERLAY_ID = 'coupon-overlay-root';
   const SPECIFIC_UUID = '733d0d67-6a30-4c48-a92e-b8e211b490f5';
   const NO_DISCOUNT_UUID = 'n/a';
+  const REWARD_LAYER_ID = 'badger-reward-layer';
+  const REWARD_POINTS_PER_LEVEL = 500;
+  const REWARD_ICON = '⭐';
+  const REWARD_ANIMATION_DURATION = 900;
   let escHandler = null;
   let modal,
     modalLoading,
     modalResult,
     resultTitle,
     resultDesc;
+  let overlayShadow = null;
   let modalOpenCount = 0;
   let cookieCheckInterval = null;
   const creatorCache = {};
   let hasRequestedCusIdCookie = false;
+  let rewardObserverInitialized = false;
+  let rewardAnimationInFlight = 0;
 
   const MODAL_CSS = `
     #coupon-modal {
@@ -128,6 +135,211 @@
     console.log(`[coupon-overlay] ${event}`);
   }
 
+  function getRewardElements() {
+    if (!overlayShadow) return null;
+    const cart = overlayShadow.querySelector('[data-reward-cart]');
+    const meter = overlayShadow.querySelector('[data-reward-meter]');
+    const points = overlayShadow.querySelector('[data-reward-points]');
+    const counter = points?.closest('.points-counter');
+    if (!cart || !meter || !points) return null;
+    return { cart, meter, points, counter };
+  }
+
+  function ensureRewardLayer() {
+    let layer = document.getElementById(REWARD_LAYER_ID);
+    if (!layer) {
+      layer = document.createElement('div');
+      layer.id = REWARD_LAYER_ID;
+      layer.className = 'reward-flight-layer';
+      document.body.appendChild(layer);
+    }
+    return layer;
+  }
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function animateCounter({ fromValue, toValue, duration, onUpdate, onComplete }) {
+    const start = performance.now();
+    function tick(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = easeOutCubic(progress);
+      const current = Math.round(fromValue + (toValue - fromValue) * eased);
+      onUpdate(current);
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+      } else if (onComplete) {
+        onComplete();
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function updateRewardMeter(progress) {
+    const elements = getRewardElements();
+    if (!elements) return;
+    const clamped = Math.min(Math.max(progress, 0), 1);
+    elements.meter.style.transform = `scaleX(${clamped})`;
+  }
+
+  function setRewardDisplay(totalPoints) {
+    const elements = getRewardElements();
+    if (!elements) return;
+    const progress = (totalPoints % REWARD_POINTS_PER_LEVEL) / REWARD_POINTS_PER_LEVEL;
+    elements.points.textContent = totalPoints.toLocaleString('en-US');
+    updateRewardMeter(progress);
+  }
+
+  function triggerCartPulse() {
+    const elements = getRewardElements();
+    if (!elements) return;
+    elements.cart.classList.remove('pulse');
+    void elements.cart.offsetWidth;
+    elements.cart.classList.add('pulse');
+  }
+
+  function animateRewardUpdate({ earnedPoints, totalPoints }) {
+    const elements = getRewardElements();
+    if (!elements) return;
+    const currentValue = Number(elements.points.textContent.replace(/,/g, '')) || 0;
+    const duration = 700;
+    const progress = (totalPoints % REWARD_POINTS_PER_LEVEL) / REWARD_POINTS_PER_LEVEL;
+
+    elements.counter?.classList.remove('bump');
+    void elements.counter?.offsetWidth;
+    elements.counter?.classList.add('bump');
+
+    updateRewardMeter(progress);
+    animateCounter({
+      fromValue: currentValue,
+      toValue: totalPoints,
+      duration,
+      onUpdate: (value) => {
+        elements.points.textContent = value.toLocaleString('en-US');
+      },
+    });
+    triggerCartPulse();
+  }
+
+  function animateRewardFlight(startRect, endRect, count = 6) {
+    const layer = ensureRewardLayer();
+    const startX = startRect.left + startRect.width / 2;
+    const startY = startRect.top + startRect.height / 2;
+    const endX = endRect.left + endRect.width / 2;
+    const endY = endRect.top + endRect.height / 2;
+    const controlX = (startX + endX) / 2;
+    const controlY = Math.min(startY, endY) - 120;
+
+    rewardAnimationInFlight += count;
+
+    for (let i = 0; i < count; i += 1) {
+      const token = document.createElement('div');
+      token.className = 'reward-point';
+      token.textContent = REWARD_ICON;
+      layer.appendChild(token);
+
+      const duration = REWARD_ANIMATION_DURATION + i * 80;
+      const jitterX = (Math.random() - 0.5) * 30;
+      const jitterY = (Math.random() - 0.5) * 20;
+      const startTime = performance.now();
+
+      const animate = (now) => {
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        const eased = easeOutCubic(t);
+        const x =
+          (1 - eased) * (1 - eased) * startX +
+          2 * (1 - eased) * eased * (controlX + jitterX) +
+          eased * eased * endX;
+        const y =
+          (1 - eased) * (1 - eased) * startY +
+          2 * (1 - eased) * eased * (controlY + jitterY) +
+          eased * eased * endY;
+        token.style.transform = `translate(${x}px, ${y}px) scale(${1 - t * 0.2})`;
+
+        if (t < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          token.classList.add('fade-out');
+          setTimeout(() => {
+            token.remove();
+            rewardAnimationInFlight -= 1;
+            if (rewardAnimationInFlight === 0) {
+              triggerCartPulse();
+            }
+          }, 200);
+        }
+      };
+      requestAnimationFrame(animate);
+    }
+  }
+
+  function getBuyTarget(element) {
+    if (!element) return null;
+    const candidate = element.closest(
+      'button, [role="button"], input[type="submit"], input[type="button"], a'
+    );
+    if (!candidate) return null;
+    const text =
+      candidate.getAttribute('aria-label') ||
+      candidate.textContent ||
+      candidate.value ||
+      '';
+    if (/buy|checkout|place order|complete|pay|purchase|confirm/i.test(text)) {
+      return candidate;
+    }
+    return null;
+  }
+
+  function getConfirmationTarget() {
+    const selectors = ['[data-order-status]', '.order-confirmation', '.thank-you'];
+    for (const selector of selectors) {
+      const el = document.querySelector(selector);
+      if (el) return el;
+    }
+    const textMatches = Array.from(document.querySelectorAll('h1, h2, p')).find((el) =>
+      /thank you|order confirmed|purchase complete|confirmation/i.test(
+        el.textContent || ''
+      )
+    );
+    return textMatches || null;
+  }
+
+  function triggerRewardFlow(originElement) {
+    const originRect = originElement?.getBoundingClientRect();
+    const rewardTarget = getRewardElements()?.cart;
+    if (!originRect || !rewardTarget) return;
+    const targetRect = rewardTarget.getBoundingClientRect();
+    const earnedPoints = Math.floor(40 + Math.random() * 110);
+
+    animateRewardFlight(originRect, targetRect, Math.max(4, Math.round(earnedPoints / 30)));
+    runIfExtensionContextValid(() =>
+      chrome.runtime.sendMessage({ type: 'REWARD_POINTS_EARNED', points: earnedPoints })
+    );
+  }
+
+  function setupRewardObservers() {
+    if (rewardObserverInitialized) return;
+    rewardObserverInitialized = true;
+
+    document.addEventListener('click', (event) => {
+      const target = getBuyTarget(event.target);
+      if (target) {
+        triggerRewardFlow(target);
+      }
+    });
+
+    const observer = new MutationObserver(() => {
+      const confirmation = getConfirmationTarget();
+      if (confirmation) {
+        triggerRewardFlow(confirmation);
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
   function getUuidCookie() {
     const match = document.cookie.match(/(?:^|; )uuid=([^;]+)/);
     return match ? decodeURIComponent(match[1]) : null;
@@ -176,6 +388,7 @@
     host.id = OVERLAY_ID;
     host.style.all = 'initial';
     const shadow = host.attachShadow({ mode: 'open' });
+    overlayShadow = shadow;
 
     Promise.all([
       fetch(chrome.runtime.getURL('styles.css')).then(resp => resp.text()),
@@ -336,6 +549,10 @@
         if (area === 'local' && changes.auth) {
           renderAuth();
           updatePoints();
+          syncRewardState();
+        }
+        if (area === 'local' && changes.reward_points_total) {
+          syncRewardState();
         }
       });
 
@@ -358,6 +575,8 @@
       };
       document.addEventListener('keydown', escHandler);
 
+      setupRewardObservers();
+      syncRewardState();
       logTelemetry('shown');
     });
   }
@@ -408,6 +627,22 @@
     );
   }
 
+  function syncRewardState() {
+    if (!isExtensionContextValid()) return;
+    runIfExtensionContextValid(() =>
+      chrome.storage.local.get(['auth', 'reward_points_total'], ({ auth, reward_points_total }) => {
+        const total =
+          Number(reward_points_total) ||
+          Number(auth?.points) ||
+          Number(auth?.user?.points) ||
+          0;
+        if (total >= 0) {
+          setRewardDisplay(total);
+        }
+      })
+    );
+  }
+
   // Show the overlay when we have a UUID that does not match the
   // specific opt-out value or the no-discount value. Some stores set or
   // update the UUID cookie asynchronously after the page loads, so if we
@@ -450,6 +685,10 @@
     } else if (msg.type === 'SHOW_LOADING') {
       resetModal();
       showModal();
+    } else if (msg.type === 'REWARD_POINTS_APPLIED') {
+      const totalPoints = Number(msg.totalPoints) || 0;
+      const earnedPoints = Number(msg.earnedPoints) || 0;
+      animateRewardUpdate({ earnedPoints, totalPoints });
     }
   });
 })();

@@ -34,6 +34,89 @@
   width: auto;
 }
 
+.rewards-hud {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f9fafb;
+  border: 1px solid #efece4;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.rewards-cart {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #efece4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #b45309;
+}
+
+.rewards-cart.pulse {
+  animation: cartPulse 0.55s ease;
+}
+
+.cart-glow {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(252, 217, 101, 0.6), transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rewards-cart.pulse .cart-glow {
+  animation: cartGlow 0.55s ease;
+}
+
+.rewards-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+}
+
+.meter-track {
+  width: 100%;
+  height: 8px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.meter-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #fcd965, #f59e0b);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.points-counter {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.points-counter .points-value {
+  font-weight: 700;
+  color: #111827;
+}
+
+.points-counter.bump {
+  animation: counterPop 0.5s ease;
+}
+
 .coupon-close {
   background: transparent;
   border: none;
@@ -205,6 +288,31 @@
   outline-offset: 2px;
 }
 
+.reward-flight-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147483646;
+}
+
+.reward-point {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #f59e0b;
+  opacity: 0.9;
+  filter: drop-shadow(0 4px 8px rgba(245, 158, 11, 0.35));
+  transition: opacity 0.2s ease;
+}
+
+.reward-point.fade-out {
+  opacity: 0;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -212,6 +320,42 @@
   }
   to {
     opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cartPulse {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes cartGlow {
+  0% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes counterPop {
+  0% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-2px);
+  }
+  100% {
     transform: translateY(0);
   }
 }

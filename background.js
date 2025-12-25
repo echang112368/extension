@@ -57,6 +57,34 @@ const storageSet = (items) =>
     });
   });
 
+const REWARD_POINTS_STORAGE_KEY = 'reward_points_total';
+
+async function applyRewardPoints(earnedPoints, tabId) {
+  if (!earnedPoints || Number.isNaN(earnedPoints)) return;
+  const data = await storageGet(['auth', REWARD_POINTS_STORAGE_KEY]);
+  const auth = data.auth || {};
+  const currentTotal =
+    Number(auth?.points) ||
+    Number(auth?.user?.points) ||
+    Number(data[REWARD_POINTS_STORAGE_KEY]) ||
+    0;
+  const totalPoints = currentTotal + earnedPoints;
+  const updatedAuth = {
+    ...auth,
+    points: totalPoints,
+    user: auth?.user ? { ...auth.user, points: totalPoints } : auth?.user,
+  };
+  await storageSet({ auth: updatedAuth, [REWARD_POINTS_STORAGE_KEY]: totalPoints });
+
+  if (tabId) {
+    chrome.tabs.sendMessage(tabId, {
+      type: 'REWARD_POINTS_APPLIED',
+      earnedPoints,
+      totalPoints,
+    });
+  }
+}
+
 function updateAllowedMerchantCache(hosts) {
   if (Array.isArray(hosts)) {
     cachedAllowedMerchants = hosts;
@@ -167,6 +195,15 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
     handleNavigation({ tabId, frameId: 0, url: tab.url }).catch((error) => {
       console.error('Failed to handle navigation', error);
+    });
+  }
+});
+
+chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (msg?.type === 'REWARD_POINTS_EARNED') {
+    const earnedPoints = Number(msg.points) || 0;
+    applyRewardPoints(earnedPoints, sender?.tab?.id).catch((error) => {
+      console.error('Failed to apply reward points', error);
     });
   }
 });

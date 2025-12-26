@@ -330,6 +330,12 @@
       }
     });
 
+    const immediateConfirmation = getConfirmationTarget();
+    if (immediateConfirmation) {
+      triggerRewardFlow(immediateConfirmation);
+      return;
+    }
+
     const observer = new MutationObserver(() => {
       const confirmation = getConfirmationTarget();
       if (confirmation) {

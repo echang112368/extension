@@ -58,6 +58,7 @@ const storageSet = (items) =>
   });
 
 const REWARD_POINTS_STORAGE_KEY = 'reward_points_total';
+const REWARD_POINTS_LAST_EARNED_KEY = 'reward_points_last_earned';
 
 async function applyRewardPoints(earnedPoints, tabId) {
   if (!earnedPoints || Number.isNaN(earnedPoints)) return;
@@ -74,13 +75,22 @@ async function applyRewardPoints(earnedPoints, tabId) {
     points: totalPoints,
     user: auth?.user ? { ...auth.user, points: totalPoints } : auth?.user,
   };
-  await storageSet({ auth: updatedAuth, [REWARD_POINTS_STORAGE_KEY]: totalPoints });
+  await storageSet({
+    auth: updatedAuth,
+    [REWARD_POINTS_STORAGE_KEY]: totalPoints,
+    [REWARD_POINTS_LAST_EARNED_KEY]: Date.now(),
+  });
 
   if (tabId) {
     chrome.tabs.sendMessage(tabId, {
       type: 'REWARD_POINTS_APPLIED',
       earnedPoints,
       totalPoints,
+    });
+  }
+  if (chrome.action?.openPopup) {
+    chrome.action.openPopup().catch((error) => {
+      console.warn('Failed to open popup for reward animation', error);
     });
   }
 }

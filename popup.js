@@ -5,21 +5,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const addCookieButton = document.getElementById('add-cookie');
   const logoutButton = document.getElementById('logout');
   const nameSpan = document.getElementById('user-name');
-  const pointsSpan = document.getElementById('user-points');
+  const pointsSpan = document.querySelector('[data-reward-points]');
+  const meterFill = document.querySelector('[data-reward-meter]');
+  const pointsCounter = pointsSpan?.closest('.points-counter');
+  const REWARD_POINTS_PER_LEVEL = 500;
   const updatePoints = async () => {
     const { auth } = await new Promise((resolve) =>
       chrome.storage.local.get('auth', resolve)
     );
     const uuid = auth?.uuid;
     const refresh = auth?.refresh;
-    if (!uuid || !refresh) return;
+    if (!uuid || !refresh) return null;
     try {
       const resp = await fetch(`http://localhost:8000/api/points/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uuid, refresh }),
       });
-      if (!resp.ok) return;
+      if (!resp.ok) return null;
       const data = await resp.json();
       const points = data?.points ?? 0;
       const updatedAuth = {
@@ -29,15 +32,40 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       await new Promise((resolve) =>
-        chrome.storage.local.set({ auth: updatedAuth }, resolve)
+        chrome.storage.local.set(
+          { auth: updatedAuth, reward_points_total: points },
+          resolve
+        )
       );
+      return points;
     } catch (e) {
       console.error('Failed to fetch points', e);
+    }
+    return null;
+  };
+
+  const updateRewardDisplay = (totalPoints, animate = false) => {
+    if (pointsSpan) {
+      const numericPoints = Number(totalPoints) || 0;
+      pointsSpan.textContent = numericPoints.toLocaleString('en-US');
+    }
+    if (meterFill) {
+      const progress =
+        ((Number(totalPoints) || 0) % REWARD_POINTS_PER_LEVEL) / REWARD_POINTS_PER_LEVEL;
+      meterFill.style.transform = `scaleX(${progress})`;
+    }
+    if (animate && pointsCounter) {
+      pointsCounter.classList.remove('bump');
+      requestAnimationFrame(() => {
+        pointsCounter.classList.add('bump');
+      });
     }
   };
 
   const render = () => {
-    chrome.storage.local.get('auth', ({ auth }) => {
+    chrome.storage.local.get(
+      ['auth', 'reward_points_total', 'reward_points_last_earned'],
+      ({ auth, reward_points_total, reward_points_last_earned }) => {
       const isLoggedIn = !!(
         auth &&
         (auth.user || auth.token || auth.uuid || auth.access || auth.refresh)
@@ -51,12 +79,19 @@ document.addEventListener('DOMContentLoaded', () => {
           auth?.email ||
           'User';
 
-        const points = auth?.user?.points ?? auth?.points ?? 0;
+        const points =
+          Number(reward_points_total) ||
+          Number(auth?.user?.points) ||
+          Number(auth?.points) ||
+          0;
 
         if (nameSpan) nameSpan.textContent = name;
-        if (pointsSpan) {
-          const numericPoints = Number(points) || 0;
-          pointsSpan.textContent = numericPoints.toLocaleString('en-US');
+        const shouldAnimate =
+          Number(reward_points_last_earned) &&
+          Date.now() - Number(reward_points_last_earned) < 30000;
+        updateRewardDisplay(points, shouldAnimate);
+        if (shouldAnimate) {
+          chrome.storage.local.remove('reward_points_last_earned');
         }
         if (beforeLogin) beforeLogin.style.display = 'none';
         if (afterLogin) afterLogin.style.display = 'flex';
@@ -196,7 +231,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  const refreshPointsAndRender = () => updatePoints().then(render);
+  const refreshPointsAndRender = async () => {
+    const updatedPoints = await updatePoints();
+    render();
+    if (typeof updatedPoints === 'number') {
+      updateRewardDisplay(updatedPoints);
+    }
+  };
 
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg?.type === 'LOGIN_SUCCESS') {
@@ -210,6 +251,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (changes.auth) {
         render();
       }
+      if (changes.reward_points_total) {
+        updateRewardDisplay(changes.reward_points_total.newValue, true);
+      }
       if (changes.cusID) {
         requestCusIdCookieForActiveTab();
       }
@@ -219,4 +263,3 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshPointsAndRender();
   requestCusIdCookieForActiveTab();
 });
-

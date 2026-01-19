@@ -21,15 +21,33 @@ async function authFetch(url, options = {}) {
   let access = auth?.access;
   const refresh = auth?.refresh;
   if (!access || !refresh) {
+    console.warn('authFetch missing auth tokens', {
+      hasAccess: Boolean(access),
+      hasRefresh: Boolean(refresh),
+      url,
+    });
     throw new Error('Not authenticated');
   }
 
   if (isTokenExpired(access)) {
-    const resp = await fetch('http://localhost:8000/api/token/refresh/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh }),
+    const tokenDetails = parseJwt(access);
+    console.info('authFetch access token expired, attempting refresh', {
+      url,
+      exp: tokenDetails?.exp,
     });
+    let resp;
+    try {
+      resp = await fetch('http://localhost:8000/api/token/refresh/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh }),
+      });
+    } catch (error) {
+      console.error('authFetch token refresh request failed', {
+        error: error?.message || error,
+      });
+      throw error;
+    }
     if (resp.ok) {
       const data = await resp.json();
       access = data?.access;
@@ -41,6 +59,17 @@ async function authFetch(url, options = {}) {
         )
       );
     } else {
+      let responseBody = null;
+      try {
+        responseBody = await resp.json();
+      } catch (error) {
+        responseBody = `Failed to read refresh response body: ${error?.message || error}`;
+      }
+      console.warn('authFetch token refresh failed', {
+        status: resp.status,
+        statusText: resp.statusText,
+        body: responseBody,
+      });
       await new Promise((resolve) =>
         chrome.storage.local.remove(['auth', 'cusID'], resolve)
       );
@@ -52,7 +81,15 @@ async function authFetch(url, options = {}) {
     ...(options.headers || {}),
     Authorization: `Bearer ${access}`,
   };
-  return fetch(url, options);
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    console.warn('authFetch non-ok response', {
+      url,
+      status: response.status,
+      statusText: response.statusText,
+    });
+  }
+  return response;
 }
 
 self.authFetch = authFetch;

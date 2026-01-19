@@ -60,6 +60,21 @@ const storageSet = (items) =>
 const REWARD_POINTS_STORAGE_KEY = 'reward_points_total';
 const REWARD_POINTS_LAST_EARNED_KEY = 'reward_points_last_earned';
 
+const sendMessageSafe = async (tabId, message, context = {}) => {
+  if (!tabId) return;
+  try {
+    await chrome.tabs.sendMessage(tabId, message);
+  } catch (error) {
+    console.warn('Failed to send message to tab (content script missing?)', {
+      tabId,
+      messageType: message?.type,
+      message,
+      context,
+      error: error?.message || error,
+    });
+  }
+};
+
 async function applyRewardPoints(earnedPoints, tabId) {
   if (!earnedPoints || Number.isNaN(earnedPoints)) return;
   const data = await storageGet(['auth', REWARD_POINTS_STORAGE_KEY]);
@@ -82,7 +97,7 @@ async function applyRewardPoints(earnedPoints, tabId) {
   });
 
   if (tabId) {
-    chrome.tabs.sendMessage(tabId, {
+    await sendMessageSafe(tabId, {
       type: 'REWARD_POINTS_APPLIED',
       earnedPoints,
       totalPoints,
@@ -451,22 +466,50 @@ async function addCookieAndCheckout() {
     let couponName = '';
     console.log('Merchant UUID:', merchantUuid);
     if (merchantUuid) {
-      console.log('going to try')
+      console.log('Requesting coupon for merchant', {
+        merchantUuid,
+        endpoint: `https://6457c6b55211.ngrok-free.app/shopify/create-discount/${merchantUuid}/`,
+      });
       try {
         const resp = await authFetch(
           `https://6457c6b55211.ngrok-free.app/shopify/create-discount/${merchantUuid}/`,
           { method: 'POST' }
         );
-        console.log('sent post')
-        console.log('Response:', resp);
+        console.log('Create discount response', {
+          status: resp.status,
+          ok: resp.ok,
+          url: resp.url,
+        });
         if (resp.ok) {
           const data = await resp.json();
           couponName = data?.coupon_code || '';
           console.log('Coupon Name:', couponName);
+        } else {
+          const contentType = resp.headers.get('content-type') || '';
+          let responseBody = null;
+          try {
+            if (contentType.includes('application/json')) {
+              responseBody = await resp.json();
+            } else {
+              responseBody = await resp.text();
+            }
+          } catch (error) {
+            responseBody = `Failed to read response body: ${error?.message || error}`;
+          }
+          console.warn('Create discount failed', {
+            status: resp.status,
+            statusText: resp.statusText,
+            url: resp.url,
+            body: responseBody,
+          });
         }
       } catch (e) {
         console.error('Failed to fetch coupon', e);
       }
+    } else {
+      console.warn('No merchant UUID found in storeID cookie', {
+        origin: urlObj.origin,
+      });
     }
 
     const discountUrl = `${urlObj.origin}/discount/${encodeURIComponent(
@@ -474,7 +517,7 @@ async function addCookieAndCheckout() {
     )}`;
     await chrome.tabs.update(tab.id, { url: discountUrl });
     await waitForTab(tab.id);
-    chrome.tabs.sendMessage(tab.id, { type: 'SHOW_LOADING' });
+    await sendMessageSafe(tab.id, { type: 'SHOW_LOADING' }, { step: 'discount' });
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     const targetUrl = `${urlObj.origin}/cart?discounts=${encodeURIComponent(
@@ -483,7 +526,7 @@ async function addCookieAndCheckout() {
 
     await chrome.tabs.update(tab.id, { url: targetUrl });
     await waitForTab(tab.id);
-    chrome.tabs.sendMessage(tab.id, { type: 'SHOW_LOADING' });
+    await sendMessageSafe(tab.id, { type: 'SHOW_LOADING' }, { step: 'cart' });
 
     const { cusID } = await new Promise((resolve) =>
       chrome.storage.local.get('cusID', resolve)
@@ -519,7 +562,7 @@ async function addCookieAndCheckout() {
 
     await chrome.tabs.reload(tab.id);
     await waitForTab(tab.id);
-    chrome.tabs.sendMessage(tab.id, { type: 'SHOW_LOADING' });
+    await sendMessageSafe(tab.id, { type: 'SHOW_LOADING' }, { step: 'reload' });
 
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
@@ -543,12 +586,12 @@ async function addCookieAndCheckout() {
     });
 
     await waitForTab(tab.id);
-    chrome.tabs.sendMessage(tab.id, { type: 'SHOW_LOADING' });
+    await sendMessageSafe(tab.id, { type: 'SHOW_LOADING' }, { step: 'checkout' });
     await new Promise((resolve) => setTimeout(resolve, 500));
-    chrome.tabs.sendMessage(tab.id, { type: 'RESULT', status: 'success' });
+    await sendMessageSafe(tab.id, { type: 'RESULT', status: 'success' }, { step: 'success' });
   } catch (e) {
     if (tab.id) {
-      chrome.tabs.sendMessage(tab.id, { type: 'RESULT', status: 'error' });
+      await sendMessageSafe(tab.id, { type: 'RESULT', status: 'error' }, { step: 'error' });
     }
   }
 }

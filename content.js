@@ -547,14 +547,12 @@
       chrome.runtime.onMessage.addListener((msg) => {
         if (msg?.type === 'LOGIN_SUCCESS' || msg?.type === 'LOGOUT') {
           renderAuth();
-          if (msg?.type === 'LOGIN_SUCCESS') updatePoints();
         }
       });
 
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area === 'local' && changes.auth) {
           renderAuth();
-          updatePoints();
           syncRewardState();
         }
         if (area === 'local' && changes.reward_points_total) {
@@ -587,52 +585,6 @@
     });
   }
 
-  function updatePoints() {
-    if (!isExtensionContextValid()) return;
-
-    runIfExtensionContextValid(() =>
-      chrome.storage.local.get('auth', async ({ auth }) => {
-        const uuid = auth?.uuid;
-        if (!uuid) return;
-        try {
-          const refresh = auth?.refresh;
-          if (!refresh) return;
-          const resp = await fetch(`http://localhost:8000/api/points/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ uuid, refresh }),
-          });
-          if (!resp.ok) return;
-          const data = await resp.json();
-          if (!isExtensionContextValid()) return;
-          await new Promise((resolve, reject) => {
-            if (!isExtensionContextValid()) {
-              resolve();
-              return;
-            }
-            try {
-              chrome.storage.local.set(
-                { auth: { ...auth, points: data?.points ?? 0 } },
-                resolve
-              );
-            } catch (error) {
-              if (
-                typeof error?.message === 'string' &&
-                error.message.includes('Extension context invalidated')
-              ) {
-                resolve();
-              } else {
-                reject(error);
-              }
-            }
-          });
-        } catch (e) {
-          console.error('Failed to fetch points', e);
-        }
-      })
-    );
-  }
-
   function syncRewardState() {
     if (!isExtensionContextValid()) return;
     runIfExtensionContextValid(() =>
@@ -654,7 +606,6 @@
   // update the UUID cookie asynchronously after the page loads, so if we
   // see one of these values initially we keep checking until it changes.
   const existingUuid = getUuidCookie();
-  updatePoints();
   if (existingUuid !== SPECIFIC_UUID && existingUuid !== NO_DISCOUNT_UUID) {
     injectOverlay();
   } else {

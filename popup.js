@@ -3,12 +3,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const afterLogin = document.getElementById('after-login');
   const loginButton = document.getElementById('login');
   const addCookieButton = document.getElementById('add-cookie');
+  const accountButton = document.getElementById('account');
   const logoutButton = document.getElementById('logout');
   const nameSpan = document.getElementById('user-name');
-  const pointsSpan = document.querySelector('[data-reward-points]');
-  const meterFill = document.querySelector('[data-reward-meter]');
-  const pointsCounter = pointsSpan?.closest('.points-counter');
+  const pointsSpans = document.querySelectorAll('[data-reward-points]');
+  const meterFills = document.querySelectorAll('[data-reward-meter]');
+  const savedAmount = document.querySelector('[data-saved-amount]');
+  const pointsCounter = document.querySelector('.points-counter');
   const REWARD_POINTS_PER_LEVEL = 500;
+  const FALLBACK_ACCOUNT_URL = 'https://badger.com/account';
   const updatePoints = async () => {
     const { auth } = await new Promise((resolve) =>
       chrome.storage.local.get('auth', resolve)
@@ -45,15 +48,14 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const updateRewardDisplay = (totalPoints, animate = false) => {
-    if (pointsSpan) {
-      const numericPoints = Number(totalPoints) || 0;
-      pointsSpan.textContent = numericPoints.toLocaleString('en-US');
-    }
-    if (meterFill) {
-      const progress =
-        ((Number(totalPoints) || 0) % REWARD_POINTS_PER_LEVEL) / REWARD_POINTS_PER_LEVEL;
-      meterFill.style.transform = `scaleX(${progress})`;
-    }
+    const numericPoints = Number(totalPoints) || 0;
+    pointsSpans.forEach((span) => {
+      span.textContent = numericPoints.toLocaleString('en-US');
+    });
+    meterFills.forEach((fill) => {
+      const progress = (numericPoints % REWARD_POINTS_PER_LEVEL) / REWARD_POINTS_PER_LEVEL;
+      fill.style.transform = `scaleX(${progress})`;
+    });
     if (animate && pointsCounter) {
       pointsCounter.classList.remove('bump');
       requestAnimationFrame(() => {
@@ -62,10 +64,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  const formatCurrency = (value) => {
+    const numericValue = Number(value) || 0;
+    return numericValue.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+    });
+  };
+
   const render = () => {
     chrome.storage.local.get(
-      ['auth', 'reward_points_total', 'reward_points_last_earned'],
-      ({ auth, reward_points_total, reward_points_last_earned }) => {
+      ['auth', 'reward_points_total', 'reward_points_last_earned', 'total_saved'],
+      ({ auth, reward_points_total, reward_points_last_earned, total_saved }) => {
       const isLoggedIn = !!(
         auth &&
         (auth.user || auth.token || auth.uuid || auth.access || auth.refresh)
@@ -84,8 +95,18 @@ document.addEventListener('DOMContentLoaded', () => {
           Number(auth?.user?.points) ||
           Number(auth?.points) ||
           0;
+        const savedValue =
+          Number(total_saved) ||
+          Number(auth?.user?.total_saved) ||
+          Number(auth?.total_saved) ||
+          Number(auth?.savings) ||
+          0;
+        const accountUrl =
+          auth?.user?.account_url || auth?.account_url || FALLBACK_ACCOUNT_URL;
 
         if (nameSpan) nameSpan.textContent = name;
+        if (savedAmount) savedAmount.textContent = formatCurrency(savedValue);
+        if (accountButton) accountButton.dataset.accountUrl = accountUrl;
         const shouldAnimate =
           Number(reward_points_last_earned) &&
           Date.now() - Number(reward_points_last_earned) < 30000;
@@ -229,6 +250,11 @@ document.addEventListener('DOMContentLoaded', () => {
       chrome.runtime.sendMessage({ type: 'LOGOUT' });
       render();
     });
+  });
+
+  accountButton?.addEventListener('click', () => {
+    const url = accountButton.dataset.accountUrl || FALLBACK_ACCOUNT_URL;
+    chrome.tabs.create({ url });
   });
 
   const refreshPointsAndRender = async () => {

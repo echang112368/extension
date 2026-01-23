@@ -175,23 +175,76 @@
   color: #111827;
 }
 
-#after-login.deal {
-  align-items: flex-start;
-  text-align: left;
+#after-login.main-state {
+  align-items: stretch;
+  gap: 20px;
 }
 
-.deal-title {
+.main-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.greeting {
   margin: 0;
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
   color: #111827;
 }
 
-.deal-subtitle {
-  margin: 0;
-  font-size: 16px;
-  line-height: 1.5;
+.savings-card {
+  background: linear-gradient(135deg, #fcd965, #f8c34a);
+  border-radius: 18px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #3d2b05;
+  box-shadow: 0 12px 20px rgba(252, 217, 101, 0.25);
+}
+
+.savings-label {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.savings-amount {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.points-progress {
+  background: #f9fafb;
+  border: 1px solid #efece4;
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.points-header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 14px;
   color: #4b5563;
+}
+
+.points-header .points-title {
+  font-weight: 600;
+  color: #111827;
+  margin-right: auto;
+}
+
+.account-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .highlight {
@@ -277,6 +330,13 @@
   background: #fcd965;
   color: #3d2b05;
   box-shadow: 0 12px 18px rgba(252, 217, 101, 0.32);
+}
+
+.cta-button.ghost {
+  background: transparent;
+  color: #111827;
+  border: 1px solid #efece4;
+  box-shadow: none;
 }
 
 .cta-button:hover {

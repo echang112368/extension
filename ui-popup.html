@@ -27,10 +27,28 @@
         <p>Log in to earn rewards on this purchase.</p>
         <button id="login" class="cta-button primary">Log in</button>
       </section>
-      <section id="after-login" class="state deal" style="display: none;" aria-live="polite">
-        <h1 class="deal-title">Get a deal with Badger</h1>
-        <p class="deal-subtitle">Let us get a deal for you</p>
-        <button id="add-cookie" class="cta-button run-badger">Run Badger</button>
+      <section id="after-login" class="state main-state" style="display: none;" aria-live="polite">
+        <div class="main-header">
+          <p class="greeting">Hi, <span id="user-name">User</span></p>
+        </div>
+        <div class="savings-card" role="group" aria-label="Total savings">
+          <span class="savings-label">Total saved</span>
+          <span class="savings-amount" data-saved-amount>$0.00</span>
+        </div>
+        <div class="points-progress" role="group" aria-label="Reward points progress">
+          <div class="points-header">
+            <span class="points-title">Reward points</span>
+            <span class="points-value" data-reward-points>0</span>
+            <span class="points-unit">pts</span>
+          </div>
+          <div class="meter-track">
+            <div class="meter-fill" data-reward-meter></div>
+          </div>
+        </div>
+        <div class="account-actions">
+          <button id="account" class="cta-button secondary" type="button">Account</button>
+          <button id="logout" class="cta-button ghost" type="button">Log out</button>
+        </div>
       </section>
       <section id="supporting-creator" class="state supporting-state" style="display: none;">
         <div class="supporting-card" role="group" aria-label="Support creator message">

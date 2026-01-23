@@ -25,10 +25,10 @@
         padding: 24px;
         display: block;
         width: 100%;
-        max-width: 320px;
+        max-width: 340px;
         border-radius: 20px;
-        background: #ffffff;
-        box-shadow: 0 24px 40px rgba(17, 24, 39, 0.15);
+        background: linear-gradient(145deg, #fff7e3 0%, #ffffff 55%);
+        box-shadow: 0 30px 50px rgba(17, 24, 39, 0.16);
         overflow: hidden;
       }
 
@@ -36,7 +36,7 @@
         padding: 24px;
         display: flex;
         flex-direction: column;
-        gap: 24px;
+        gap: 22px;
       }
 
       .popup-header {
@@ -52,27 +52,28 @@
 
       .brand-mark img {
         display: block;
-        height: 28px;
+        height: 30px;
         width: auto;
       }
 
       .popup-content {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 18px;
       }
 
       .state {
         display: flex;
         flex-direction: column;
         gap: 16px;
-        border-radius: 16px;
-        padding: 24px;
+        border-radius: 18px;
+        padding: 22px;
       }
 
       #before-login {
-        background: #fcd965;
+        background: linear-gradient(135deg, #fcd965 0%, #f59e0b 100%);
         color: #3d2b05;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
       }
 
       #before-login h1 {
@@ -89,8 +90,22 @@
 
       #after-login {
         background: #ffffff;
-        border: 1px solid #efece4;
+        border: 1px solid #f2e6c8;
         color: #111827;
+        box-shadow: 0 16px 24px rgba(15, 23, 42, 0.06);
+      }
+
+      .user-card {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .user-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
       }
 
       .greeting {
@@ -99,14 +114,27 @@
         font-weight: 600;
       }
 
+      .level-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #111827;
+        color: #fff7e3;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+      }
+
       .rewards-hud {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 12px 16px;
+        padding: 14px 16px;
         border-radius: 16px;
-        background: #f9fafb;
-        border: 1px solid #efece4;
+        background: #fffaf0;
+        border: 1px solid #f6e6c9;
       }
 
       .rewards-meter {
@@ -118,7 +146,7 @@
 
       .meter-track {
         width: 100%;
-        height: 8px;
+        height: 10px;
         background: #f3f4f6;
         border-radius: 999px;
         overflow: hidden;
@@ -127,7 +155,7 @@
       .meter-fill {
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, #fcd965, #f59e0b);
+        background: linear-gradient(90deg, #fcd965, #f59e0b, #f97316);
         transform: scaleX(0);
         transform-origin: left;
         transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -136,7 +164,7 @@
       .points-counter {
         display: flex;
         align-items: baseline;
-        gap: 4px;
+        gap: 6px;
         font-size: 13px;
         color: #6b7280;
       }
@@ -149,6 +177,39 @@
       .points-label {
         font-size: 12px;
         color: #6b7280;
+      }
+
+      .savings-row {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        font-size: 13px;
+        color: #6b7280;
+      }
+
+      .savings-value {
+        font-weight: 700;
+        color: #111827;
+      }
+
+      .level-progress {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .level-details {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 12px;
+        color: #6b7280;
+      }
+
+      .level-next {
+        font-weight: 600;
+        color: #111827;
       }
 
       .points-counter.bump {
@@ -178,10 +239,10 @@
       }
 
       .cta-button.primary {
-        background: #262626;
+        background: #111827;
         color: #ffffff;
         align-self: flex-start;
-        box-shadow: 0 12px 18px rgba(38, 38, 38, 0.18);
+        box-shadow: 0 12px 18px rgba(17, 24, 39, 0.18);
       }
 
       .cta-button.secondary {
@@ -224,6 +285,8 @@
         body {
           max-width: none;
         }
+
+        
       }
     </style>
   </head>
@@ -241,16 +304,35 @@
           <button id="login" class="cta-button primary">Log in</button>
         </section>
         <section id="after-login" class="state" style="display: none;">
-          <p class="greeting">Hi, <span id="user-name">there</span></p>
-          <div class="rewards-hud" aria-live="polite">
-            <div class="rewards-meter">
-              <div class="meter-track">
-                <div class="meter-fill" data-reward-meter></div>
+          <div class="user-card">
+            <div class="user-meta">
+              <p class="greeting">Hi, <span id="user-name">there</span></p>
+              <span class="level-pill" data-level-name>Level 1 · Starter</span>
+            </div>
+            <div class="rewards-hud" aria-live="polite">
+              <div class="rewards-meter">
+                <div class="meter-track">
+                  <div class="meter-fill" data-reward-meter></div>
+                </div>
+                <div class="points-counter">
+                  <span class="points-value" data-reward-points>0</span>
+                  <span class="points-label">pts</span>
+                </div>
+                <div class="savings-row">
+                  <span class="savings-value" data-reward-savings>$0</span>
+                  <span class="points-label">saved</span>
+                </div>
               </div>
-              <div class="points-counter">
-                <span class="points-value" data-reward-points>0</span>
-                <span class="points-label">pts</span>
-              </div>
+            </div>
+          </div>
+          <div class="level-progress">
+            <div class="level-details">
+              <span>Next level</span>
+              <span class="level-next" data-level-next>Scout at 1,000 pts</span>
+            </div>
+            <div class="level-details">
+              <span data-level-remaining>1,000 pts to go</span>
+              <span data-level-progress>0%</span>
             </div>
           </div>
           <button id="logout" class="logout-button" type="button">Log out</button>

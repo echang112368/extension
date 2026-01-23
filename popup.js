@@ -6,9 +6,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const logoutButton = document.getElementById('logout');
   const nameSpan = document.getElementById('user-name');
   const pointsSpan = document.querySelector('[data-reward-points]');
+  const savingsSpan = document.querySelector('[data-reward-savings]');
   const meterFill = document.querySelector('[data-reward-meter]');
   const pointsCounter = pointsSpan?.closest('.points-counter');
-  const REWARD_POINTS_PER_LEVEL = 500;
+  const levelName = document.querySelector('[data-level-name]');
+  const levelNext = document.querySelector('[data-level-next]');
+  const levelRemaining = document.querySelector('[data-level-remaining]');
+  const levelProgress = document.querySelector('[data-level-progress]');
+  const LEVELS = [
+    { name: 'Starter', minPoints: 0 },
+    { name: 'Scout', minPoints: 1000 },
+    { name: 'Builder', minPoints: 2500 },
+    { name: 'Trailblazer', minPoints: 5000 },
+    { name: 'Vanguard', minPoints: 9000 },
+    { name: 'Legend', minPoints: 15000 },
+  ];
   const updatePoints = async () => {
     const { auth } = await new Promise((resolve) =>
       chrome.storage.local.get('auth', resolve)
@@ -25,34 +37,69 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!resp.ok) return null;
       const data = await resp.json();
       const points = data?.points ?? 0;
+      const savings = data?.savings ?? 0;
       const updatedAuth = {
         ...auth,
         points,
-        user: auth?.user ? { ...auth.user, points } : auth?.user,
+        savings,
+        user: auth?.user ? { ...auth.user, points, savings } : auth?.user,
       };
 
       await new Promise((resolve) =>
         chrome.storage.local.set(
-          { auth: updatedAuth, reward_points_total: points },
+          {
+            auth: updatedAuth,
+            reward_points_total: points,
+            reward_savings_total: savings,
+          },
           resolve
         )
       );
-      return points;
+      return { points, savings };
     } catch (e) {
       console.error('Failed to fetch points', e);
     }
     return null;
   };
 
-  const updateRewardDisplay = (totalPoints, animate = false) => {
+  const updateRewardDisplay = (totalPoints, totalSavings, animate = false) => {
+    const numericPoints = Number(totalPoints) || 0;
     if (pointsSpan) {
-      const numericPoints = Number(totalPoints) || 0;
       pointsSpan.textContent = numericPoints.toLocaleString('en-US');
     }
+    if (savingsSpan) {
+      const numericSavings = Number(totalSavings) || 0;
+      savingsSpan.textContent = `$${numericSavings.toLocaleString('en-US')}`;
+    }
     if (meterFill) {
-      const progress =
-        ((Number(totalPoints) || 0) % REWARD_POINTS_PER_LEVEL) / REWARD_POINTS_PER_LEVEL;
-      meterFill.style.transform = `scaleX(${progress})`;
+      const currentIndex = LEVELS.reduce(
+        (acc, level, index) => (numericPoints >= level.minPoints ? index : acc),
+        0
+      );
+      const currentLevel = LEVELS[currentIndex];
+      const nextLevel = LEVELS[currentIndex + 1];
+      const progress = nextLevel
+        ? (numericPoints - currentLevel.minPoints) /
+          (nextLevel.minPoints - currentLevel.minPoints)
+        : 1;
+      meterFill.style.transform = `scaleX(${Math.min(Math.max(progress, 0), 1)})`;
+
+      if (levelName) {
+        levelName.textContent = `Level ${currentIndex + 1} · ${currentLevel.name}`;
+      }
+      if (levelNext) {
+        levelNext.textContent = nextLevel
+          ? `${nextLevel.name} at ${nextLevel.minPoints.toLocaleString('en-US')} pts`
+          : 'Max level reached';
+      }
+      if (levelRemaining) {
+        levelRemaining.textContent = nextLevel
+          ? `${(nextLevel.minPoints - numericPoints).toLocaleString('en-US')} pts to go`
+          : 'You are at the top!';
+      }
+      if (levelProgress) {
+        levelProgress.textContent = `${Math.round(progress * 100)}%`;
+      }
     }
     if (animate && pointsCounter) {
       pointsCounter.classList.remove('bump');
@@ -64,8 +111,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const render = () => {
     chrome.storage.local.get(
-      ['auth', 'reward_points_total', 'reward_points_last_earned'],
-      ({ auth, reward_points_total, reward_points_last_earned }) => {
+      [
+        'auth',
+        'reward_points_total',
+        'reward_points_last_earned',
+        'reward_savings_total',
+      ],
+      ({
+        auth,
+        reward_points_total,
+        reward_points_last_earned,
+        reward_savings_total,
+      }) => {
       const isLoggedIn = !!(
         auth &&
         (auth.user || auth.token || auth.uuid || auth.access || auth.refresh)
@@ -84,12 +141,17 @@ document.addEventListener('DOMContentLoaded', () => {
           Number(auth?.user?.points) ||
           Number(auth?.points) ||
           0;
+        const savings =
+          Number(reward_savings_total) ||
+          Number(auth?.user?.savings) ||
+          Number(auth?.savings) ||
+          0;
 
         if (nameSpan) nameSpan.textContent = name;
         const shouldAnimate =
           Number(reward_points_last_earned) &&
           Date.now() - Number(reward_points_last_earned) < 30000;
-        updateRewardDisplay(points, shouldAnimate);
+        updateRewardDisplay(points, savings, shouldAnimate);
         if (shouldAnimate) {
           chrome.storage.local.remove('reward_points_last_earned');
         }
@@ -232,10 +294,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const refreshPointsAndRender = async () => {
-    const updatedPoints = await updatePoints();
+    const updatedValues = await updatePoints();
     render();
-    if (typeof updatedPoints === 'number') {
-      updateRewardDisplay(updatedPoints);
+    if (updatedValues?.points != null) {
+      updateRewardDisplay(updatedValues.points, updatedValues.savings);
     }
   };
 
@@ -251,8 +313,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (changes.auth) {
         render();
       }
-      if (changes.reward_points_total) {
-        updateRewardDisplay(changes.reward_points_total.newValue, true);
+      if (changes.reward_points_total || changes.reward_savings_total) {
+        const points =
+          changes.reward_points_total?.newValue ?? changes.reward_points_total?.oldValue;
+        const savings =
+          changes.reward_savings_total?.newValue ??
+          changes.reward_savings_total?.oldValue;
+        updateRewardDisplay(points, savings, true);
       }
       if (changes.cusID) {
         requestCusIdCookieForActiveTab();

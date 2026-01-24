@@ -534,7 +534,7 @@ async function addCookieAndCheckout() {
 
     const cookieTasks = [];
     const uuidValue = couponName
-      ? '733d0d67-6a30-4c48-a92e-b8e211b490f5'
+      ? '9a285c63-0e14-4f50-8b4f-a209da0e2f33'
       : 'n/a';
     const cookieBaseDetails = {
       url: `${urlObj.origin}/`,

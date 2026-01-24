@@ -13,14 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const levelNext = document.querySelector('[data-level-next]');
   const levelRemaining = document.querySelector('[data-level-remaining]');
   const levelProgress = document.querySelector('[data-level-progress]');
-  const LEVELS = [
-    { name: 'Starter', minPoints: 0 },
-    { name: 'Scout', minPoints: 1000 },
-    { name: 'Builder', minPoints: 2500 },
-    { name: 'Trailblazer', minPoints: 5000 },
-    { name: 'Vanguard', minPoints: 9000 },
-    { name: 'Legend', minPoints: 15000 },
-  ];
+  const POINTS_PER_LEVEL = 1000;
   const updatePoints = async () => {
     const { auth } = await new Promise((resolve) =>
       chrome.storage.local.get('auth', resolve)
@@ -72,30 +65,26 @@ document.addEventListener('DOMContentLoaded', () => {
       savingsSpan.textContent = `$${numericSavings.toLocaleString('en-US')}`;
     }
     if (meterFill) {
-      const currentIndex = LEVELS.reduce(
-        (acc, level, index) => (numericPoints >= level.minPoints ? index : acc),
-        0
-      );
-      const currentLevel = LEVELS[currentIndex];
-      const nextLevel = LEVELS[currentIndex + 1];
-      const progress = nextLevel
-        ? (numericPoints - currentLevel.minPoints) /
-          (nextLevel.minPoints - currentLevel.minPoints)
-        : 1;
+      const currentLevelNumber = Math.floor(numericPoints / POINTS_PER_LEVEL) + 1;
+      const nextLevelPoints = currentLevelNumber * POINTS_PER_LEVEL;
+      const progress =
+        POINTS_PER_LEVEL === 0
+          ? 0
+          : (numericPoints % POINTS_PER_LEVEL) / POINTS_PER_LEVEL;
       meterFill.style.transform = `scaleX(${Math.min(Math.max(progress, 0), 1)})`;
 
       if (levelName) {
-        levelName.textContent = `Level ${currentIndex + 1} · ${currentLevel.name}`;
+        levelName.textContent = `Level ${currentLevelNumber}`;
       }
       if (levelNext) {
-        levelNext.textContent = nextLevel
-          ? `${nextLevel.name} at ${nextLevel.minPoints.toLocaleString('en-US')} pts`
-          : 'Max level reached';
+        levelNext.textContent = `Level ${currentLevelNumber + 1} at ${nextLevelPoints.toLocaleString(
+          'en-US'
+        )} pts`;
       }
       if (levelRemaining) {
-        levelRemaining.textContent = nextLevel
-          ? `${(nextLevel.minPoints - numericPoints).toLocaleString('en-US')} pts to go`
-          : 'You are at the top!';
+        levelRemaining.textContent = `${(nextLevelPoints - numericPoints).toLocaleString(
+          'en-US'
+        )} pts to go`;
       }
       if (levelProgress) {
         levelProgress.textContent = `${Math.round(progress * 100)}%`;

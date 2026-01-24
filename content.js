@@ -3,7 +3,7 @@
   const SPECIFIC_UUID = '733d0d67-6a30-4c48-a92e-b8e211b490f5';
   const NO_DISCOUNT_UUID = 'n/a';
   const REWARD_LAYER_ID = 'badger-reward-layer';
-  const REWARD_POINTS_PER_LEVEL = 500;
+  const REWARD_POINTS_PER_LEVEL = 1000;
   const REWARD_ICON = '⭐';
   const REWARD_ANIMATION_DURATION = 900;
   let escHandler = null;

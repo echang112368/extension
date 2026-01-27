@@ -1,6 +1,6 @@
 (() => {
   const OVERLAY_ID = 'coupon-overlay-root';
-  const SPECIFIC_UUID = '733d0d67-6a30-4c48-a92e-b8e211b490f5';
+  const SPECIFIC_UUID = '23797360-1b0b-48e1-bef2-1e43da40ec5e';
   const NO_DISCOUNT_UUID = 'n/a';
   const REWARD_LAYER_ID = 'badger-reward-layer';
   const REWARD_POINTS_PER_LEVEL = 1000;

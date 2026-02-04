@@ -468,11 +468,11 @@ async function addCookieAndCheckout() {
     if (merchantUuid) {
       console.log('Requesting coupon for merchant', {
         merchantUuid,
-        endpoint: `https://6457c6b55211.ngrok-free.app/shopify/create-discount/${merchantUuid}/`,
+        endpoint: `https://f48b-2607-b400-26-0-e02d-88ef-be02-490e.ngrok-free.app/shopify/create-discount/${merchantUuid}/`,
       });
       try {
         const resp = await authFetch(
-          `https://6457c6b55211.ngrok-free.app/shopify/create-discount/${merchantUuid}/`,
+          `https://f48b-2607-b400-26-0-e02d-88ef-be02-490e.ngrok-free.app/shopify/create-discount/${merchantUuid}/`,
           { method: 'POST' }
         );
         console.log('Create discount response', {
